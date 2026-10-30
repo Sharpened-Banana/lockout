@@ -26,6 +26,8 @@ read_globals = {
   "C_WeeklyRewards", "C_MythicPlus", "C_PlayerInfo", "C_CurrencyInfo",
   -- Bags
   "C_Container",
+  -- UI
+  "UIParent", "GameTooltip", "C_ClassColor", "IsShiftKeyDown", "GameFontHighlightSmall",
 }
 
 -- Tests and the mock legitimately define WoW globals and busted-style helpers.
