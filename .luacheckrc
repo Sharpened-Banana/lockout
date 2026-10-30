@@ -12,6 +12,9 @@ read_globals = {
   "time", "date", "C_Timer", "CreateFrame", "InCombatLockdown", "Enum",
   "UnitGUID", "UnitName", "UnitClass", "UnitLevel", "GetRealmName",
   "ITEM_UPGRADE_TOOLTIP_FORMAT_STRING",
+  -- Character / Equipment
+  "GetAverageItemLevel", "GetSpecialization", "GetSpecializationInfo", "GetMoney",
+  "GetInventoryItemLink", "C_TooltipInfo", "C_Item",
   -- Season
   "GetBuildInfo", "LE_EXPANSION_LEVEL_CURRENT", "C_ChallengeMode",
   "EJ_GetNumTiers", "EJ_GetTierInfo", "EJ_GetCurrentTier", "EJ_SelectTier",
