@@ -28,6 +28,9 @@ read_globals = {
   "C_Container",
   -- UI
   "UIParent", "GameTooltip", "C_ClassColor", "IsShiftKeyDown", "GameFontHighlightSmall",
+  -- Detail panel
+  "GetCursorInfo", "ClearCursor", "StaticPopup_Show", "GetSpecializationInfoByID", "CLASS_ICON_TCOORDS",
+  "GetMoneyString", "ACCEPT", "CANCEL",
 }
 
 -- Tests and the mock legitimately define WoW globals and busted-style helpers.

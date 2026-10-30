@@ -7,12 +7,14 @@ local function newPlayer()
   return { guid = "Player-1-0001", name = "Thrall", realm = "Draenor", classFile = "SHAMAN", level = 80 }
 end
 
--- Universal stub frame: unknown methods are no-ops returning the frame.
+-- Universal stub frame: unknown methods are no-ops returning the frame. Only method-style
+-- (capitalized) keys get one, so an unset field such as `frame.link` reads nil as in the client.
 local frameMethods = {}
 local frameMeta = {}
 frameMeta.__index = function(self, key)
   local m = frameMethods[key]
   if m then return m end
+  if type(key) ~= "string" or not key:match("^%u") then return nil end
   local noop = function() return self end
   return noop
 end
@@ -47,11 +49,17 @@ property("Checked", false)
 property("Scale", 1)
 property("HorizontalScroll", 0)
 property("VerticalScroll", 0)
+property("Texture", nil)
 
 function frameMethods.SetSize(self, w, h)
   self:SetWidth(w)
   self:SetHeight(h)
 end
+function frameMethods.GetSize(self) return self:GetWidth(), self:GetHeight() end
+function frameMethods.SetTexCoord(self, ...) state[self].props.texCoord = { ... } end
+function frameMethods.GetTexCoord(self) return unpack(state[self].props.texCoord or { 0, 1, 0, 1 }) end
+function frameMethods.SetTextColor(self, r, g, b) state[self].props.textColor = { r, g, b } end
+function frameMethods.GetTextColor(self) return unpack(state[self].props.textColor or { 1, 1, 1 }) end
 function frameMethods.SetMinMaxValues(self, lo, hi) state[self].props.minMax = { lo, hi } end
 function frameMethods.GetMinMaxValues(self)
   local mm = state[self].props.minMax or { 0, 0 }

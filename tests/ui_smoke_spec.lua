@@ -27,6 +27,17 @@ local function install()
       if id == 501 then return "Crypt", 501, 1800, 1, 2, 10 end
     end,
   }
+  -- Detail panel APIs
+  C_Item = {
+    GetItemIconByID = function() return 134400 end,
+    GetItemNameByID = function() end,
+    GetItemInfoInstant = function(id) return id end,
+  }
+  GetMoneyString = function(copper) return tostring(copper) end
+  GetSpecializationInfoByID = function() end
+  CLASS_ICON_TCOORDS = {}
+  StaticPopupDialogs = {}
+  StaticPopup_Show = function() end
 end
 
 local function seed(db, now)
@@ -81,8 +92,13 @@ describe("UI smoke", function()
     ns.DB:Init(nil)
     seed(ns.db, mock.now)
     ns.db.settings.showLegacy = true
+    -- Record row clicks on their way to the real detail panel.
     detail = {}
-    ns.Detail = { Toggle = function(_, guid) detail[#detail + 1] = guid end }
+    local toggle = ns.Detail.Toggle
+    ns.Detail.Toggle = function(self, guid)
+      detail[#detail + 1] = guid
+      return toggle(self, guid)
+    end
   end)
 
   -- Show the window and give the grid a size, as the client's layout pass would.
@@ -241,6 +257,43 @@ describe("UI smoke", function()
     local grid = open()
     click(grid.slots[1].left)
     assert.equals("Player-1-0001", ns.UI.selectedGuid)
+    assert.equals("Player-1-0001", grid.selected)
+    click(grid.slots[1].left)
+    assert.is_nil(ns.UI.selectedGuid)
+  end)
+
+  it("detail panel keeps the grid selection in step", function()
+    local grid = open()
+    local function selected() return grid.slots[2].left.deco.selected:IsShown() end
+    click(grid.slots[2].left)  -- Jaina
+    local panel = ns.Detail.panel
+    assert.is_true(panel:IsShown())
+    assert.equals("Player-2-0002", ns.UI.selectedGuid)
+    assert.equals("Player-2-0002", grid.selected)
+    assert.is_true(selected())
+
+    -- the panel's own close button clears the selection
+    click(panel.close)
+    assert.is_false(panel:IsShown())
+    assert.is_nil(ns.UI.selectedGuid)
+    assert.is_nil(grid.selected)
+    assert.is_false(selected())
+
+    -- the same row reopens it (no stale toggle state), and a second click closes it
+    click(grid.slots[2].left)
+    assert.is_true(panel:IsShown())
+    assert.equals("Player-2-0002", grid.selected)
+    click(grid.slots[2].cells[1])
+    assert.is_false(panel:IsShown())
+    assert.is_nil(grid.selected)
+
+    -- forgetting the shown character closes the panel and drops the selection
+    click(grid.slots[2].left)
+    StaticPopupDialogs.LOCKOUT_FORGET.OnAccept(nil, "Player-2-0002")
+    assert.is_false(panel:IsShown())
+    assert.is_nil(ns.UI.selectedGuid)
+    assert.is_nil(grid.selected)
+    assert.equals(27, #grid.rows)
   end)
 
   it("cell hover shows the cell tooltip", function()

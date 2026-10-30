@@ -69,10 +69,13 @@ local function onStarClick(row)
   UI:Refresh()
 end
 
+-- The detail panel owns the selection while it exists: it sets it on open and clears it on close.
 local function onRowClick(row)
-  UI.selectedGuid = UI.selectedGuid ~= row.guid and row.guid or nil
-  if ns.Detail then ns.Detail:Toggle(row.guid) end
-  UI:Refresh()
+  if ns.Detail then
+    ns.Detail:Toggle(row.guid)
+  else
+    UI:SetSelected(UI.selectedGuid ~= row.guid and row.guid or nil)
+  end
 end
 
 local function buildTitleBar()
@@ -238,6 +241,15 @@ function UI:Refresh()
     return { text = ns.Rows.EMPTY }
   end)
   grid:Refresh()
+end
+
+-- Highlight a row without rebuilding the grid.
+function UI:SetSelected(guid)
+  self.selectedGuid = guid
+  if grid then
+    grid:SetSelected(guid)
+    grid:Render()
+  end
 end
 
 function UI:SelectTab(name)
