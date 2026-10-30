@@ -266,6 +266,8 @@ local function build()
   panel:SetPoint("BOTTOMLEFT", main, "BOTTOMRIGHT", 2, 0)
   panel:EnableMouse(true)
   panel:Hide()
+  -- Refresh skips while the main window is hidden; catch up when it shows again.
+  panel:SetScript("OnShow", function() Detail:Refresh() end)
   Detail.panel = panel
 
   panel.icon = panel:CreateTexture(nil, "ARTWORK")
@@ -485,7 +487,7 @@ local function renderWeek(week, y)
 end
 
 function Detail:Refresh()
-  if not panel or not self.guid or not panel:IsShown() then return end
+  if not panel or not self.guid or not panel:IsVisible() then return end
   local model = Detail.Model(self.guid, ns.db, time(), UnitGUID("player"), self.editing)
   if not model then
     self:Close() -- forgotten or wiped
