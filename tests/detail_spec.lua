@@ -411,6 +411,47 @@ describe("Detail panel", function()
     assert.equals("Proudmoore-Silvermoon", panel.name:GetText())
   end)
 
+  describe("scrolling", function()
+    local function wheel(delta) panel.scroll:GetScript("OnMouseWheel")(panel.scroll, delta) end
+
+    it("hides the scroll bar when the content fits", function()
+      open(ALT)
+      panel.scroll:SetHeight(5000)
+      ns.Detail:Refresh()
+      assert.is_false(panel.bar:IsShown())
+      wheel(-1)
+      assert.equals(0, panel.scroll:GetVerticalScroll())
+    end)
+
+    it("shows a bar synced with the wheel and clamps when the content shrinks", function()
+      open(ALT)
+      click(panel.editButton) -- edit mode adds the drop zone and item ID box
+      local tall = panel.content:GetHeight()
+      panel.scroll:SetHeight(tall - 30)
+      panel.scroll:GetScript("OnSizeChanged")(panel.scroll)
+      assert.is_true(panel.bar:IsShown())
+      assert.same({ 0, 30 }, { panel.bar:GetMinMaxValues() })
+
+      wheel(-1)
+      assert.equals(30, panel.scroll:GetVerticalScroll())
+      assert.equals(30, panel.bar:GetValue())
+      wheel(1)
+      assert.equals(0, panel.scroll:GetVerticalScroll())
+      assert.equals(0, panel.bar:GetValue())
+
+      -- dragging the bar scrolls the content
+      panel.bar:GetScript("OnValueChanged")(panel.bar, 20)
+      assert.equals(20, panel.scroll:GetVerticalScroll())
+      wheel(-10)
+      assert.equals(30, panel.scroll:GetVerticalScroll())
+
+      click(panel.editButton) -- content shrinks below the view
+      assert.truthy(panel.content:GetHeight() < panel.scroll:GetHeight())
+      assert.equals(0, panel.scroll:GetVerticalScroll())
+      assert.is_false(panel.bar:IsShown())
+    end)
+  end)
+
   it("header icon prefers the spec icon, then class coords", function()
     open(CURRENT)
     assert.equals(136048, panel.icon:GetTexture())
