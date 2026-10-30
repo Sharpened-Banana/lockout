@@ -31,6 +31,8 @@ read_globals = {
   -- Detail panel
   "GetCursorInfo", "ClearCursor", "StaticPopup_Show", "GetSpecializationInfoByID", "CLASS_ICON_TCOORDS",
   "GetMoneyString", "ACCEPT", "CANCEL",
+  -- Minimap / Settings
+  "LibStub", "Settings", "MinimalSliderWithSteppersMixin",
 }
 
 -- Tests and the mock legitimately define WoW globals and busted-style helpers.
