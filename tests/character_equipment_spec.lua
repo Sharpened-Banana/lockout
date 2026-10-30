@@ -48,6 +48,34 @@ describe("Character collector", function()
     assert.is_nil(rec.meta.specID)
     assert.equals(662, rec.meta.ilvl)
   end)
+
+  it("still writes meta when the spec APIs are missing", function()
+    local ns = loadAddon({ "Collectors/Character.lua" }, function()
+      stubs()
+      GetSpecialization, GetSpecializationInfo = nil, nil
+    end)
+    ns.CollectNow("Character")
+    local meta = ns.DB:Current().meta
+    assert.equals(0, #ns.log)
+    assert.equals("Thrall", meta.name)
+    assert.equals(80, meta.level)
+    assert.equals(662, meta.ilvl)
+    assert.is_nil(meta.specID)
+  end)
+
+  it("prefers C_SpecializationInfo", function()
+    local ns = loadAddon({ "Collectors/Character.lua" }, function()
+      stubs()
+      GetSpecialization, GetSpecializationInfo = nil, nil
+      C_SpecializationInfo = {
+        GetSpecialization = function() return 1 end,
+        GetSpecializationInfo = function(i) if i == 1 then return 262 end end,
+      }
+    end)
+    local rec = ns.DB:Current()
+    ns.collectors.Character:Collect(rec, mock.now)
+    assert.equals(262, rec.meta.specID)
+  end)
 end)
 
 describe("Equipment collector", function()
