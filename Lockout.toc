@@ -1,0 +1,41 @@
+## Interface: 120007
+## Title: Lockout
+## Notes: Warband lockouts, weekly progress, gear and consumables
+## Author: lonezebra
+## Version: @project-version@
+## SavedVariables: LockoutDB
+## IconTexture: Interface\Icons\INV_Misc_Key_14
+
+embeds.xml
+
+Core\Init.lua
+Core\Util.lua
+Core\DB.lua
+Core\Reset.lua
+Core\Watchlist.lua
+
+Data\Consumables.lua
+Data\Content.lua
+
+Core\Season.lua
+
+Collectors\Character.lua
+Collectors\Equipment.lua
+Collectors\Instances.lua
+Collectors\WorldBosses.lua
+Collectors\Vault.lua
+Collectors\MythicPlus.lua
+Collectors\Delves.lua
+Collectors\Bags.lua
+
+UI\Theme.lua
+UI\Rows.lua
+UI\Tabs\Raids.lua
+UI\Tabs\Dungeons.lua
+UI\Tabs\WorldBosses.lua
+UI\Tabs\Weekly.lua
+UI\Grid.lua
+UI\DetailPanel.lua
+UI\MainFrame.lua
+UI\Minimap.lua
+UI\Settings.lua
