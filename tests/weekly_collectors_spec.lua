@@ -142,10 +142,35 @@ describe("MythicPlus collector", function()
         { challengeMapID = 505, level = 8, completed = true },
         { challengeMapID = 506, level = 12, completed = false },
       },
-      weeklyBest = 12,
+      weeklyBest = 8, -- the incomplete +12 does not count toward the vault
       rating = 2450,
       seasonBest = { [505] = 11, [506] = 9 },
     }, rec.mythicPlus)
+  end)
+
+  it("weekly best ignores incomplete runs", function()
+    local _, def, rec = setup()
+    history = {
+      { mapChallengeModeID = 505, level = 12, completed = false },
+      { mapChallengeModeID = 506, level = 9 },
+    }
+    def:Collect(rec, mock.now)
+    assert.equals(0, rec.mythicPlus.weeklyBest)
+    assert.equals(2, #rec.mythicPlus.runs)
+    history = { { mapChallengeModeID = 505, level = 7, completed = true }, { mapChallengeModeID = 506, level = 12, completed = false } }
+    def:Collect(rec, mock.now)
+    assert.equals(7, rec.mythicPlus.weeklyBest)
+  end)
+
+  it("requests map info on login so run history is populated", function()
+    local requested = 0
+    local _, def = setup()
+    C_MythicPlus.RequestMapInfo = function() requested = requested + 1 end
+    def.OnLogin()
+    assert.equals(1, requested)
+    C_MythicPlus.RequestMapInfo = nil
+    def.OnLogin() -- tolerates the API being absent
+    assert.equals(1, requested)
   end)
 
   it("no key stores nil", function()
