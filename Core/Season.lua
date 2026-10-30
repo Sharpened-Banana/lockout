@@ -62,15 +62,25 @@ local function build()
   return result
 end
 
--- Current-season columns, cached in ns.db.season per game build.
+local builtThisSession = false
+
+local function usable(cache, buildNumber)
+  return type(cache) == "table" and cache.build == buildNumber
+    and type(cache.raids) == "table" and type(cache.dungeons) == "table" and type(cache.mplus) == "table"
+    and (#cache.raids > 0 or #cache.dungeons > 0)
+end
+
+-- Current-season columns, saved in ns.db.season per game build. The first call each session
+-- rebuilds (the saved copy may predate data the client loads late); later calls reuse it.
 function Season.Get()
-  local buildNumber = select(4, GetBuildInfo())
+  local buildNumber = select(2, GetBuildInfo())
   local cache = ns.db.season
-  if cache and cache.build == buildNumber and (#cache.raids > 0 or #cache.dungeons > 0) then
+  if builtThisSession and usable(cache, buildNumber) then
     return cache
   end
   local result = build()
   result.build = buildNumber
   ns.db.season = result
+  builtThisSession = true
   return result
 end

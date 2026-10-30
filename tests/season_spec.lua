@@ -31,7 +31,7 @@ describe("Season", function()
   local function stubEJ()
     calls = { ej = 0, select = {} }
     selected = 1
-    build = 120007
+    build = "66666"
     local function count() calls.ej = calls.ej + 1 end
     local tiers = { "Classic", "Midnight" }
     local raids = { { 100, "Raid A", 2100, 3 }, { 101, "Midnight", 2101, 1 } }
@@ -44,7 +44,7 @@ describe("Season", function()
 
     EXPANSION_NAME11 = "Midnight"
     LE_EXPANSION_LEVEL_CURRENT = 11
-    GetBuildInfo = function() return "12.0.7", "66666", "Oct 1 2026", build end
+    GetBuildInfo = function() return "12.0.7", build, "Oct 1 2026", 120007 end
     EJ_GetNumTiers = function() count() return #tiers end
     EJ_GetTierInfo = function(i) count() return tiers[i] end
     EJ_GetCurrentTier = function() count() return selected end
@@ -100,20 +100,47 @@ describe("Season", function()
     assert.equals(1, selected)
   end)
 
-  it("caches per build", function()
+  it("caches per build number within a session", function()
     ns.Season:Get()
     calls.ej = 0
     ns.Season:Get()
     assert.equals(0, calls.ej)
-    assert.equals(120007, ns.db.season.build)
-    build = 120008
+    assert.equals("66666", ns.db.season.build)
+    build = "66667"
     ns.Season:Get()
     assert.truthy(calls.ej > 0)
-    assert.equals(120008, ns.db.season.build)
+    assert.equals("66667", ns.db.season.build)
+  end)
+
+  it("rebuilds a persisted cache once per session", function()
+    -- Same build, but saved by an earlier session (e.g. before the M+ map table loaded).
+    ns.db.season = { build = "66666", raids = { { mapID = 1, name = "Stale", bosses = 1 } }, dungeons = {}, mplus = {} }
+    local s = ns.Season:Get()
+    assert.same({ { mapID = 2100, name = "Raid A", bosses = 3 } }, s.raids)
+    assert.equals(2, #s.mplus)
+    calls.ej = 0
+    ns.Season:Get()
+    assert.equals(0, calls.ej)
+  end)
+
+  it("rebuilds a malformed cache", function()
+    ns.Season:Get()
+    for _, bad in ipairs({
+      { build = "66666", raids = "x", dungeons = {}, mplus = {} },
+      { build = "66666", raids = { 1 }, dungeons = nil, mplus = {} },
+      { build = "66666", raids = { 1 }, dungeons = {}, mplus = false },
+      "garbage",
+    }) do
+      ns.db.season = bad
+      local s = ns.Season:Get()
+      assert.equals(1, #s.raids)
+      assert.equals(2, #s.mplus)
+    end
   end)
 
   it("rebuilds an empty cache", function()
-    ns.db.season = { build = 120007, raids = {}, dungeons = {}, mplus = {} }
+    ns.Season:Get()
+    ns.db.season = { build = "66666", raids = {}, dungeons = {}, mplus = {} }
     local s = ns.Season:Get()
     assert.equals(1, #s.raids)
   end)
