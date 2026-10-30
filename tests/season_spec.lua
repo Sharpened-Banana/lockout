@@ -1,4 +1,3 @@
-local mock = require("tests.wow_mock")
 local loader = require("tests.loader")
 
 describe("Content", function()
@@ -13,10 +12,7 @@ describe("Content", function()
   end)
 
   it("uses Blizzard slot globals when present", function()
-    mock.reset()
-    HEADSLOT = "Kopf"
-    local ns = {}
-    loadfile("Data/Content.lua")("Lockout", ns) -- loader.load would reset the stub away
+    local ns = loader.load({ "Data/Content.lua" }, function() HEADSLOT = "Kopf" end)
     assert.equals("Kopf", ns.Content.SLOT_NAMES[1])
   end)
 

@@ -1,15 +1,11 @@
 local mock = require("tests.wow_mock")
+local loader = require("tests.loader")
 
--- Install API stubs BEFORE loading the collector files: `requires` is checked at registration time.
+-- Stubs are installed before the files load: `requires` is checked at registration time.
 local function loadAddon(files, install)
-  mock.reset()
-  if install then install() end
-  local ns = {}
   local list = { "Core/Init.lua", "Core/Util.lua", "Core/DB.lua", "Data/Content.lua" }
   for _, f in ipairs(files) do list[#list + 1] = f end
-  for _, path in ipairs(list) do
-    assert(loadfile(path))("Lockout", ns)
-  end
+  local ns = loader.load(list, install)
   ns.DB:Init(nil)
   return ns
 end
