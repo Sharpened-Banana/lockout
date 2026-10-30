@@ -408,6 +408,7 @@ describe("UI smoke", function()
   end)
 
   it("settings cog only when the settings module exists", function()
+    ns.Settings = nil
     open()
     assert.is_nil(ns.UI.cog)
 
@@ -433,3 +434,191 @@ describe("UI smoke", function()
     assert.equals(ns.Theme.yellow, ns.Rows.COLORS.yellow)
   end)
 end)
+
+describe("Minimap and Settings", function()
+  local ns, settingsLog
+
+  -- A recording stand-in for the Blizzard Settings API.
+  local function installSettings()
+    settingsLog = { settings = {}, widgets = {} }
+    Settings = {
+      VarType = { Number = "number", Boolean = "boolean" },
+      RegisterVerticalLayoutCategory = function(name)
+        settingsLog.name = name
+        return { GetID = function() return 77 end }
+      end,
+      RegisterAddOnSetting = function(_, variable, key, tbl, varType, label, default)
+        local setting = { key = key, tbl = tbl, varType = varType, label = label, default = default }
+        function setting:SetValueChangedCallback(fn) self.callback = fn end
+        function setting:Set(value)
+          self.tbl[self.key] = value
+          self.callback(self, value)
+        end
+        settingsLog.settings[variable] = setting
+        return setting
+      end,
+      CreateSliderOptions = function(min, max, step)
+        return { min = min, max = max, step = step, SetLabelFormatter = function() end }
+      end,
+      CreateSlider = function(_, setting, options) settingsLog.widgets[setting.key] = options end,
+      CreateCheckbox = function(_, setting) settingsLog.widgets[setting.key] = "checkbox" end,
+      RegisterAddOnCategory = function() settingsLog.registered = true end,
+      OpenToCategory = function(id) settingsLog.opened = id end,
+    }
+  end
+
+  local function load(extra)
+    ns = loader.load(nil, function()
+      install()
+      if extra then extra() end
+    end)
+    ns.DB:Init(nil)
+    seed(ns.db, mock.now)
+    return ns
+  end
+
+  local function tooltipFor()
+    local lines = {}
+    ns.Minimap.FillTooltip({ AddLine = function(_, text) lines[#lines + 1] = text end })
+    return lines
+  end
+
+  it("summary counts ready and best key", function()
+    local n = load()
+    local now = mock.now
+    n.db.characters = {
+      a = { meta = { name = "Aria", level = 80 },
+        vault = { resetAt = now + 100, unclaimed = true, activities = {} },
+        mythicPlus = { resetAt = now + 100, key = { challengeMapID = 501, level = 10 } } },
+      b = { meta = { name = "Bram", level = 80 },
+        vault = { resetAt = now + 100, unclaimed = false, activities = {} },
+        mythicPlus = { resetAt = now + 100, key = { challengeMapID = 502, level = 12 } } },
+      -- expired key and below the minimum level: neither counts
+      c = { meta = { name = "Cleo", level = 80 }, mythicPlus = { resetAt = now - 1, key = { challengeMapID = 503, level = 15 } } },
+      d = { meta = { name = "Dale", level = 5 }, mythicPlus = { resetAt = now + 100, key = { challengeMapID = 504, level = 20 } } },
+    }
+    local summary = n.Minimap.Summary(n.db, now)
+    assert.equals(1, summary.ready)
+    assert.same({ level = 12, challengeMapID = 502, label = "Bram" }, summary.bestKey)
+
+    n.db.characters = { a = { meta = { name = "Aria", level = 80 } } }
+    summary = n.Minimap.Summary(n.db, now)
+    assert.equals(0, summary.ready)
+    assert.is_nil(summary.bestKey)
+  end)
+
+  it("loads without the minimap libraries or the Settings API", function()
+    local n = load()
+    n.Fire("DB_READY")
+    local found = false
+    for _, line in ipairs(n.log) do
+      assert.is_nil(line:find("callback failed", 1, true))
+      if line == "minimap libs missing" then found = true end
+    end
+    assert.is_true(found)
+    assert.is_nil(n.Minimap.icon)
+    n.Minimap.Apply()
+    n.Settings:Open()
+    SlashCmdList.LOCKOUT("config")
+  end)
+
+  it("config opens the settings category", function()
+    local n = load(installSettings)
+    n.Fire("DB_READY")
+    assert.equals("Lockout", settingsLog.name)
+    assert.is_true(settingsLog.registered)
+    SlashCmdList.LOCKOUT("config")
+    assert.equals(77, settingsLog.opened)
+  end)
+
+  it("settings write through and refresh the window", function()
+    local n = load(installSettings)
+    n.Fire("DB_READY")
+    local min, scale = settingsLog.widgets.minLevel, settingsLog.widgets.scale
+    assert.same({ 1, 90, 1 }, { min.min, min.max, min.step })
+    assert.same({ 0.7, 1.5, 0.05 }, { scale.min, scale.max, scale.step })
+    assert.equals("checkbox", settingsLog.widgets.showLegacy)
+
+    n.UI:Show()
+    local grid = n.UI.grid
+    grid.frame:GetScript("OnSizeChanged")(grid.frame, 800, 400)
+    assert.equals(28, #grid.rows)
+
+    settingsLog.settings.Lockout_MinLevel:Set(81)
+    assert.equals(81, n.db.settings.minLevel)
+    assert.equals(1, #grid.rows) -- only the logged-in character is exempt from the level filter
+
+    settingsLog.settings.Lockout_Scale:Set(1.25)
+    assert.equals(1.25, n.db.settings.scale)
+    assert.equals(1.25, n.UI.frame:GetScale())
+
+    settingsLog.settings.Lockout_ShowLegacy:Set(false)
+    assert.is_false(n.db.settings.showLegacy)
+    for _, line in ipairs(n.log) do assert.is_nil(line:find("callback failed", 1, true)) end
+  end)
+
+  it("minimap checkbox inverts the saved hide flag", function()
+    local shown = {}
+    local n = load(function()
+      installSettings()
+      LibStub = function(name)
+        if name == "LibDataBroker-1.1" then
+          return { NewDataObject = function(_, _, obj) return obj end }
+        end
+        return {
+          Register = function() end,
+          Show = function(_, iconName) shown[#shown + 1] = "show " .. iconName end,
+          Hide = function(_, iconName) shown[#shown + 1] = "hide " .. iconName end,
+        }
+      end
+    end)
+    n.Fire("DB_READY")
+    local box = settingsLog.settings.Lockout_ShowMinimap
+    assert.is_false(n.db.settings.minimap.hide)
+    assert.is_true(box.tbl[box.key]) -- shown
+
+    box:Set(false)
+    assert.is_true(n.db.settings.minimap.hide)
+    box:Set(true)
+    assert.is_false(n.db.settings.minimap.hide)
+    assert.same({ "hide Lockout", "show Lockout" }, shown)
+  end)
+
+  it("registers a launcher with click handlers and a tooltip", function()
+    local created, registered
+    local n = load(function()
+      installSettings()
+      LibStub = function(name)
+        if name == "LibDataBroker-1.1" then
+          return { NewDataObject = function(_, objName, obj) created = { name = objName, obj = obj }; return obj end }
+        end
+        return { Register = function(_, regName, obj, db) registered = { name = regName, obj = obj, db = db } end }
+      end
+    end)
+    n.Fire("DB_READY")
+    assert.equals("Lockout", created.name)
+    assert.equals("launcher", created.obj.type)
+    assert.equals("Interface\\Icons\\INV_Misc_Key_14", created.obj.icon)
+    assert.equals("Lockout", registered.name)
+    assert.equals(n.db.settings.minimap, registered.db)
+
+    created.obj.OnClick(nil, "LeftButton")
+    assert.is_true(LockoutMainFrame:IsShown())
+    created.obj.OnClick(nil, "LeftButton")
+    assert.is_false(LockoutMainFrame:IsShown())
+    created.obj.OnClick(nil, "RightButton")
+    assert.equals(77, settingsLog.opened)
+
+    -- Thrall holds the only key (+12 Crypt) and the only vault is not ready
+    local lines = {}
+    created.obj.OnTooltipShow({ AddLine = function(_, text) lines[#lines + 1] = text end })
+    assert.same({ "Lockout", "Vault ready: 0 characters", "Highest key: +12 Crypt (Thrall)" }, lines)
+  end)
+
+  it("tooltip omits the key line when nobody has one", function()
+    local n = load()
+    n.db.characters["Player-1-0001"].mythicPlus = nil
+    assert.same({ "Lockout", "Vault ready: 0 characters" }, tooltipFor())
+  end)
+end)
+
