@@ -13,7 +13,7 @@ read_globals = {
   "UnitGUID", "UnitName", "UnitClass", "UnitLevel", "GetRealmName",
   "ITEM_UPGRADE_TOOLTIP_FORMAT_STRING",
   -- Character / Equipment
-  "GetAverageItemLevel", "GetSpecialization", "GetSpecializationInfo", "GetMoney",
+  "GetAverageItemLevel", "GetSpecialization", "GetSpecializationInfo", "C_SpecializationInfo", "GetMoney",
   "GetInventoryItemLink", "C_TooltipInfo", "C_Item",
   -- Season
   "GetBuildInfo", "LE_EXPANSION_LEVEL_CURRENT", "C_ChallengeMode",
