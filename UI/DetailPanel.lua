@@ -11,6 +11,7 @@ local PANEL_W, PAD, HEADER_H = 320, 10, 64
 local INNER_W = PANEL_W - 2 * PAD
 local LINE_H, ICON, GAP = 18, 16, 10
 local WHEEL_PX = 3 * LINE_H
+local BAR = 6 -- scroll bar thickness; it sits in the right padding
 local M0 = 23 -- Mythic 0 difficulty
 local EMPTY = ns.Rows.EMPTY
 local CLASS_ICONS = "Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES"
@@ -82,7 +83,7 @@ end
 
 -- Widgets -----------------------------------------------------------------
 
-local panel, scroll, content
+local panel, scroll, content, bar
 local pools = Detail.pools
 
 local function text(parent, justify, font)
@@ -107,6 +108,47 @@ local function textButton(parent, label, w, h)
   b.label:SetPoint("CENTER")
   b.label:SetText(label)
   highlight(b)
+  return b
+end
+
+local function maxScroll() return math.max(0, content:GetHeight() - scroll:GetHeight()) end
+
+-- Scroll to y (clamped) and keep the bar in step.
+local function scrollTo(y)
+  y = math.min(maxScroll(), math.max(0, y))
+  scroll:SetVerticalScroll(y)
+  bar:SetValue(y)
+end
+
+-- Content or view height changed: resize the bar's range, hide it when everything fits.
+local function updateScrollRange()
+  local max = maxScroll()
+  bar:SetMinMaxValues(0, max)
+  bar:SetShown(max > 0)
+  scrollTo(scroll:GetVerticalScroll())
+end
+
+local function onWheel(_, delta) scrollTo(scroll:GetVerticalScroll() - delta * WHEEL_PX) end
+
+local function newBar()
+  local b = CreateFrame("Slider", nil, panel, "BackdropTemplate")
+  Theme.Backdrop(b, Theme.bg)
+  b:SetOrientation("VERTICAL")
+  b:SetPoint("TOPRIGHT", -(PAD - BAR) / 2, -HEADER_H)
+  b:SetPoint("BOTTOMRIGHT", -(PAD - BAR) / 2, PAD)
+  b:SetWidth(BAR)
+  local thumb = b:CreateTexture(nil, "OVERLAY")
+  local a = Theme.accent
+  thumb:SetColorTexture(a[1], a[2], a[3], 0.6)
+  thumb:SetSize(BAR, 40)
+  b:SetThumbTexture(thumb)
+  b:SetMinMaxValues(0, 0)
+  b:SetValue(0)
+  b:EnableMouse(true)
+  b:EnableMouseWheel(true)
+  b:SetScript("OnValueChanged", function(_, v) scroll:SetVerticalScroll(math.min(maxScroll(), math.max(0, v))) end)
+  b:SetScript("OnMouseWheel", onWheel)
+  b:Hide()
   return b
 end
 
@@ -292,10 +334,10 @@ local function build()
   content:SetSize(INNER_W, 1)
   scroll:SetScrollChild(content)
   scroll:EnableMouseWheel(true)
-  scroll:SetScript("OnMouseWheel", function(self, delta)
-    local max = math.max(0, content:GetHeight() - self:GetHeight())
-    self:SetVerticalScroll(math.min(max, math.max(0, self:GetVerticalScroll() - delta * WHEEL_PX)))
-  end)
+  scroll:SetScript("OnMouseWheel", onWheel)
+  bar = newBar()
+  scroll:SetScript("OnSizeChanged", updateScrollRange)
+  panel.scroll, panel.content, panel.bar = scroll, content, bar
 
   pool("heading", function() return text(content, "LEFT", "GameFontNormal") end)
   pool("category", function()
@@ -506,6 +548,7 @@ function Detail:Refresh()
     y = y + 26
   end
   content:SetHeight(y)
+  updateScrollRange()
 
   for _, p in pairs(pools) do
     for i = p.used + 1, #p.items do p.items[i]:Hide() end
@@ -520,7 +563,7 @@ function Detail:Open(guid)
   if not panel then build() end
   if guid ~= self.guid then
     self.editing = false
-    scroll:SetVerticalScroll(0)
+    scrollTo(0)
   end
   self.guid = guid
   panel:Show()
