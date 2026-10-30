@@ -10,10 +10,10 @@ ns.TabOrder = { "Raids", "Dungeons", "WorldBosses", "Weekly" }
 -- Cell text when there is nothing to show.
 Rows.EMPTY = "–"
 
--- Shared cell colors ({r, g, b}).
+-- Shared cell colors ({r, g, b}); the theme is the single source.
 Rows.COLORS = {
-  green = { 0.3, 0.9, 0.3 },
-  yellow = { 1, 0.82, 0 },
+  green = ns.Theme.green,
+  yellow = ns.Theme.yellow,
 }
 
 local function metaOf(char)

@@ -5,7 +5,7 @@ local NOW = 1000000
 local function load()
   return loader.load({
     "Core/Init.lua", "Core/Util.lua", "Core/Reset.lua", "Data/Content.lua",
-    "UI/Rows.lua", "UI/Tabs/Raids.lua", "UI/Tabs/Dungeons.lua", "UI/Tabs/WorldBosses.lua", "UI/Tabs/Weekly.lua",
+    "UI/Theme.lua", "UI/Rows.lua", "UI/Tabs/Raids.lua", "UI/Tabs/Dungeons.lua", "UI/Tabs/WorldBosses.lua", "UI/Tabs/Weekly.lua",
   })
 end
 

@@ -17,17 +17,69 @@ frameMeta.__index = function(self, key)
   return noop
 end
 
-local state = setmetatable({}, { __mode = "k" }) -- frame -> { events, scripts }
+local state = setmetatable({}, { __mode = "k" }) -- frame -> { events, scripts, props, points }
 
 function frameMethods.RegisterEvent(self, event) state[self].events[event] = true end
 function frameMethods.UnregisterEvent(self, event) state[self].events[event] = nil end
 function frameMethods.SetScript(self, name, fn) state[self].scripts[name] = fn end
 function frameMethods.GetScript(self, name) return state[self].scripts[name] end
 
-local function createFrame()
+-- Real visibility (frames start shown, as in the client); scripts are not fired.
+function frameMethods.Show(self) state[self].props.shown = true end
+function frameMethods.Hide(self) state[self].props.shown = false end
+function frameMethods.IsShown(self) return state[self].props.shown end
+function frameMethods.SetShown(self, shown) state[self].props.shown = shown and true or false end
+
+-- Simple stored properties: SetX(v) / GetX() -> v or the default.
+local function property(name, default)
+  frameMethods["Set" .. name] = function(self, v) state[self].props[name] = v end
+  frameMethods["Get" .. name] = function(self)
+    local v = state[self].props[name]
+    if v == nil then return default end
+    return v
+  end
+end
+property("Text", "")
+property("Width", 0)
+property("Height", 0)
+property("Value", 0)
+property("Checked", false)
+property("Scale", 1)
+property("HorizontalScroll", 0)
+property("VerticalScroll", 0)
+
+function frameMethods.SetSize(self, w, h)
+  self:SetWidth(w)
+  self:SetHeight(h)
+end
+function frameMethods.SetMinMaxValues(self, lo, hi) state[self].props.minMax = { lo, hi } end
+function frameMethods.GetMinMaxValues(self)
+  local mm = state[self].props.minMax or { 0, 0 }
+  return mm[1], mm[2]
+end
+function frameMethods.SetPoint(self, ...) table.insert(state[self].points, { ... }) end
+function frameMethods.ClearAllPoints(self) state[self].points = {} end
+function frameMethods.GetNumPoints(self) return #state[self].points end
+function frameMethods.GetPoint(self, i)
+  local p = state[self].points[i or 1]
+  if p then return unpack(p) end
+end
+
+local function newStub()
   local f = setmetatable({}, frameMeta)
-  state[f] = { events = {}, scripts = {} }
+  state[f] = { events = {}, scripts = {}, props = { shown = true }, points = {} }
+  return f
+end
+
+-- Regions are distinct stubs so their text/size/visibility don't leak into the owner.
+function frameMethods.CreateFontString() return newStub() end
+function frameMethods.CreateTexture() return newStub() end
+
+-- CreateFrame(type, name, ...) also sets the named global, as the client does.
+local function createFrame(_, name)
+  local f = newStub()
   frames[#frames + 1] = f
+  if name then _G[name] = f end
   return f
 end
 
