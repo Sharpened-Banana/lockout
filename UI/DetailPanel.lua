@@ -333,7 +333,7 @@ end
 local function renderHeader(h)
   local icon = panel.icon
   local specIcon = h.specID and select(4, GetSpecializationInfoByID(h.specID))
-  local coords = h.classFile and CLASS_ICON_TCOORDS[h.classFile]
+  local coords = not specIcon and h.classFile and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[h.classFile]
   if specIcon then
     icon:SetTexture(specIcon)
     icon:SetTexCoord(0, 1, 0, 1)

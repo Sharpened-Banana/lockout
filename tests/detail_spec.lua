@@ -410,4 +410,19 @@ describe("Detail panel", function()
     open(FRESH)
     assert.equals("Interface\\Icons\\INV_Misc_QuestionMark", panel.icon:GetTexture())
   end)
+
+  it("header icon reads class coords only as a fallback and tolerates them missing", function()
+    local reads = 0
+    CLASS_ICON_TCOORDS = setmetatable({}, { __index = function(_, k)
+      reads = reads + 1
+      if k == "SHAMAN" then return { 0.25, 0.49, 0.25, 0.5 } end
+    end })
+    open(CURRENT)
+    assert.equals(136048, panel.icon:GetTexture())
+    assert.equals(0, reads)
+    CLASS_ICON_TCOORDS = nil
+    ns.db.characters[CURRENT].meta.specID = nil
+    ns.Detail:Refresh()
+    assert.equals("Interface\\Icons\\INV_Misc_QuestionMark", panel.icon:GetTexture())
+  end)
 end)
