@@ -24,6 +24,8 @@ read_globals = {
   "GetNumSavedWorldBosses", "GetSavedWorldBossInfo", "C_QuestLog", "C_DateAndTime",
   -- Vault / MythicPlus / Delves
   "C_WeeklyRewards", "C_MythicPlus", "C_PlayerInfo", "C_CurrencyInfo",
+  -- Bags
+  "C_Container",
 }
 
 -- Tests and the mock legitimately define WoW globals and busted-style helpers.
