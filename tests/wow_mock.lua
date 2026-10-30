@@ -31,6 +31,18 @@ function frameMethods.Show(self) state[self].props.shown = true end
 function frameMethods.Hide(self) state[self].props.shown = false end
 function frameMethods.IsShown(self) return state[self].props.shown end
 function frameMethods.SetShown(self, shown) state[self].props.shown = shown and true or false end
+-- Visible only when it and every ancestor is shown.
+function frameMethods.IsVisible(self)
+  local f = self
+  while f do
+    if not state[f].props.shown then return false end
+    f = state[f].parent
+    if f and not state[f] then return true end -- parent is not a mock frame
+  end
+  return true
+end
+function frameMethods.GetParent(self) return state[self].parent end
+function frameMethods.SetParent(self, parent) state[self].parent = parent end
 
 -- Simple stored properties: SetX(v) / GetX() -> v or the default.
 local function property(name, default)
@@ -73,19 +85,19 @@ function frameMethods.GetPoint(self, i)
   if p then return unpack(p) end
 end
 
-local function newStub()
+local function newStub(parent)
   local f = setmetatable({}, frameMeta)
-  state[f] = { events = {}, scripts = {}, props = { shown = true }, points = {} }
+  state[f] = { events = {}, scripts = {}, props = { shown = true }, points = {}, parent = parent }
   return f
 end
 
 -- Regions are distinct stubs so their text/size/visibility don't leak into the owner.
-function frameMethods.CreateFontString() return newStub() end
-function frameMethods.CreateTexture() return newStub() end
+function frameMethods.CreateFontString(self) return newStub(self) end
+function frameMethods.CreateTexture(self) return newStub(self) end
 
--- CreateFrame(type, name, ...) also sets the named global, as the client does.
-local function createFrame(_, name)
-  local f = newStub()
+-- CreateFrame(type, name, parent, ...) also sets the named global, as the client does.
+local function createFrame(_, name, parent)
+  local f = newStub(parent)
   frames[#frames + 1] = f
   if name then _G[name] = f end
   return f

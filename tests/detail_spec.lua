@@ -399,6 +399,18 @@ describe("Detail panel", function()
     for _, line in ipairs(ns.log) do assert.is_nil(line:find("callback failed", 1, true)) end
   end)
 
+  it("skips refreshes while the main window is hidden and catches up on show", function()
+    open(ALT)
+    LockoutMainFrame:Hide()
+    assert.is_true(panel:IsShown())
+    ns.db.characters[ALT].meta.name = "Proudmoore"
+    ns.Fire("DATA_UPDATED", "Character")
+    assert.equals("Jaina-Silvermoon", panel.name:GetText())
+    LockoutMainFrame:Show()
+    panel:GetScript("OnShow")(panel) -- the client fires it when the parent is shown again
+    assert.equals("Proudmoore-Silvermoon", panel.name:GetText())
+  end)
+
   it("header icon prefers the spec icon, then class coords", function()
     open(CURRENT)
     assert.equals(136048, panel.icon:GetTexture())
