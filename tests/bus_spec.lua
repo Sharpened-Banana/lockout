@@ -158,6 +158,18 @@ describe("collector bus", function()
     assert.is_true(ready)
   end)
 
+  it("ADDON_LOADED matches the addon's own folder name", function()
+    -- A case-insensitive filesystem can load the folder as "lockout".
+    ns = loader.load({ "Core/Init.lua" }, nil, "lockout")
+    local inited
+    ns.DB = { Init = function(_, saved) inited = saved end }
+    LockoutDB = { marker = true }
+    mock.fire("ADDON_LOADED", "Lockout")
+    assert.is_nil(inited)
+    mock.fire("ADDON_LOADED", "lockout")
+    assert.equals(LockoutDB, inited)
+  end)
+
   it("Log formats and LogOnce dedupes by key", function()
     ns.Log("%s=%d", "a", 1)
     ns.LogOnce("k", "once %s", "x")

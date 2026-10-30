@@ -1,4 +1,4 @@
-local _, ns = ...
+local addonName, ns = ...
 
 -- Logging ---------------------------------------------------------------
 
@@ -108,7 +108,7 @@ end
 
 local function onEvent(_, event, ...)
   if event == "ADDON_LOADED" then
-    if (...) == "Lockout" then
+    if (...) == addonName then
       ns.DB:Init(LockoutDB)
       ns.Fire("DB_READY")
     end
