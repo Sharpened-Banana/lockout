@@ -38,7 +38,7 @@ below needs the real client (Retail 12.0.x). Enable errors first:
 - [ ] After the weekly reset, a character with finished vault slots shows the Vault flag until it is claimed.
 - [ ] Claim the vault and relog/refresh: the flag clears.
 - [ ] Key column shows the owned keystone (`+level Dungeon`); rating matches the Mythic+ panel.
-- [ ] Weekly best on the detail panel counts only completed runs (an abandoned/depleted-incomplete run does not).
+- [ ] Weekly best matches the Great Vault Mythic+ row tooltip after an over-time run.
 - [ ] Delve currencies show with an "updated <age>" label (they do not reset).
 
 ## Gear

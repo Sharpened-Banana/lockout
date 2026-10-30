@@ -119,7 +119,9 @@ describe("MythicPlus collector", function()
 
   it("is registered with its events and requirements", function()
     local _, def = setup()
-    assert.same({ "CHALLENGE_MODE_COMPLETED", "BAG_UPDATE_DELAYED", "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE" }, def.events)
+    assert.same({
+      "CHALLENGE_MODE_COMPLETED", "BAG_UPDATE_DELAYED", "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", "CHALLENGE_MODE_MAPS_UPDATE",
+    }, def.events)
     assert.is_nil(def.disabled)
   end)
 
@@ -142,24 +144,22 @@ describe("MythicPlus collector", function()
         { challengeMapID = 505, level = 8, completed = true },
         { challengeMapID = 506, level = 12, completed = false },
       },
-      weeklyBest = 8, -- the incomplete +12 does not count toward the vault
+      weeklyBest = 12, -- the over-time +12 still counts toward the vault
       rating = 2450,
       seasonBest = { [505] = 11, [506] = 9 },
     }, rec.mythicPlus)
   end)
 
-  it("weekly best ignores incomplete runs", function()
+  it("weekly best counts over-time runs", function()
     local _, def, rec = setup()
     history = {
-      { mapChallengeModeID = 505, level = 12, completed = false },
-      { mapChallengeModeID = 506, level = 9 },
+      { mapChallengeModeID = 505, level = 7, completed = true },
+      { mapChallengeModeID = 506, level = 12, completed = false }, -- finished over time
+      { mapChallengeModeID = 507, level = 9 },
     }
     def:Collect(rec, mock.now)
-    assert.equals(0, rec.mythicPlus.weeklyBest)
-    assert.equals(2, #rec.mythicPlus.runs)
-    history = { { mapChallengeModeID = 505, level = 7, completed = true }, { mapChallengeModeID = 506, level = 12, completed = false } }
-    def:Collect(rec, mock.now)
-    assert.equals(7, rec.mythicPlus.weeklyBest)
+    assert.equals(12, rec.mythicPlus.weeklyBest)
+    assert.equals(3, #rec.mythicPlus.runs)
   end)
 
   it("requests map info on login so run history is populated", function()
