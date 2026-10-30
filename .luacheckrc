@@ -19,6 +19,9 @@ read_globals = {
   "GetBuildInfo", "LE_EXPANSION_LEVEL_CURRENT", "C_ChallengeMode",
   "EJ_GetNumTiers", "EJ_GetTierInfo", "EJ_GetCurrentTier", "EJ_SelectTier",
   "EJ_GetInstanceByIndex", "EJ_GetInstanceInfo", "EJ_GetEncounterInfoByIndex",
+  -- Instances / WorldBosses
+  "GetNumSavedInstances", "GetSavedInstanceInfo", "GetSavedInstanceEncounterInfo", "RequestRaidInfo",
+  "GetNumSavedWorldBosses", "GetSavedWorldBossInfo", "C_QuestLog", "C_DateAndTime",
 }
 
 -- Tests and the mock legitimately define WoW globals and busted-style helpers.
