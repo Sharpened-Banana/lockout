@@ -159,8 +159,7 @@ describe("Detail model", function()
   end)
 
   it("editing lists hidden scan-set items", function()
-    ns.db.characters[ALT].watchlist[2002] = false
-    ns.db.characters[FRESH].watchlist = { [2002] = true } -- keeps 2002 in the scan set
+    ns.db.characters[ALT].watchlist[2002] = false -- custom item, off, watched by nobody else
     local normal = ns.Detail.Model(ALT, ns.db, mock.now, CURRENT)
     assert.equals(1, #normal.consumables[1].items)
     local editing = ns.Detail.Model(ALT, ns.db, mock.now, CURRENT, true)
@@ -302,8 +301,6 @@ describe("Detail panel", function()
     assert.is_true(panel.dropZone:IsShown())
     assert.is_true(panel.idBox:IsShown())
 
-    -- another character watching 2002 keeps it in the scan set
-    ns.db.characters[FRESH].watchlist = { [2002] = true }
     local item = shown("item", ns)[2]
     assert.equals(2002, item.itemID)
     assert.is_true(item:GetChecked())
@@ -311,25 +308,36 @@ describe("Detail panel", function()
     click(item)
     assert.is_false(ns.db.characters[ALT].watchlist[2002])
     assert.equals(1, fired)
-    -- still listed (unchecked) while editing
+    -- still listed (unchecked, greyed) while editing although no other character watches it
     assert.equals(2, #shown("item", ns))
     assert.is_false(shown("item", ns)[2]:GetChecked())
+    assert.same({ ns.Theme.grey[1], ns.Theme.grey[2], ns.Theme.grey[3] }, { shown("item", ns)[2].name:GetTextColor() })
     -- re-checking restores it
     shown("item", ns)[2]:SetChecked(true)
     click(shown("item", ns)[2])
     assert.is_true(ns.db.characters[ALT].watchlist[2002])
     assert.equals(2, fired)
-
-    -- unchecking an item nobody else watches drops it from the scan set entirely
-    ns.db.characters[FRESH].watchlist = nil
     shown("item", ns)[2]:SetChecked(false)
     click(shown("item", ns)[2])
-    assert.equals(1, #shown("item", ns))
 
     click(panel.editButton)
     assert.is_false(ns.Detail.editing)
     assert.equals(1, #shown("item", ns))
     assert.is_false(panel.dropZone:IsShown())
+  end)
+
+  it("checkbox box is drawn on the row itself and shown only while editing", function()
+    open(ALT)
+    local item = shown("item", ns)[1]
+    -- no child frame: a higher-level frame's backdrop would cover the row's checked texture
+    assert.is_nil(item.box)
+    assert.is_false(item.boxBorder:IsShown())
+    assert.is_false(item.boxFill:IsShown())
+    click(panel.editButton)
+    item = shown("item", ns)[1]
+    assert.is_true(item.boxBorder:IsShown())
+    assert.is_true(item.boxFill:IsShown())
+    assert.is_true(item:GetChecked())
   end)
 
   it("item rows do nothing outside edit mode", function()

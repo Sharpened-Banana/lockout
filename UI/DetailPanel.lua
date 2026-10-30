@@ -180,15 +180,20 @@ end
 local function makeItemRow()
   local b = CreateFrame("CheckButton", nil, content)
   b:SetSize(INNER_W, LINE_H)
-  b.box = CreateFrame("Frame", nil, b, "BackdropTemplate")
-  Theme.Backdrop(b.box, Theme.panel)
-  b.box:SetSize(12, 12)
-  b.box:SetPoint("LEFT")
-  local a = Theme.accent
+  -- The box is textures on the row itself (a child frame's backdrop would cover the tick).
+  local border, fill, a = Theme.border, Theme.panel, Theme.accent
+  b.boxBorder = b:CreateTexture(nil, "BACKGROUND")
+  b.boxBorder:SetColorTexture(border[1], border[2], border[3], 1)
+  b.boxBorder:SetSize(12, 12)
+  b.boxBorder:SetPoint("LEFT")
+  b.boxFill = b:CreateTexture(nil, "BORDER")
+  b.boxFill:SetColorTexture(fill[1], fill[2], fill[3], 1)
+  b.boxFill:SetPoint("TOPLEFT", b.boxBorder, "TOPLEFT", 1, -1)
+  b.boxFill:SetPoint("BOTTOMRIGHT", b.boxBorder, "BOTTOMRIGHT", -1, 1)
   local tick = b:CreateTexture(nil, "OVERLAY")
   tick:SetColorTexture(a[1], a[2], a[3], 1)
-  tick:SetPoint("TOPLEFT", b.box, "TOPLEFT", 3, -3)
-  tick:SetPoint("BOTTOMRIGHT", b.box, "BOTTOMRIGHT", -3, 3)
+  tick:SetPoint("TOPLEFT", b.boxBorder, "TOPLEFT", 3, -3)
+  tick:SetPoint("BOTTOMRIGHT", b.boxBorder, "BOTTOMRIGHT", -3, 3)
   b:SetCheckedTexture(tick)
   b.icon = b:CreateTexture(nil, "ARTWORK")
   b.icon:SetSize(ICON, ICON)
@@ -376,7 +381,8 @@ local function fillItem(b, item, editing)
   b.itemID = item.itemID
   if editing then b:Enable() else b:Disable() end
   b:SetChecked(editing and item.shown)
-  b.box:SetShown(editing)
+  b.boxBorder:SetShown(editing)
+  b.boxFill:SetShown(editing)
   local x = editing and 18 or 0
   b.icon:ClearAllPoints()
   b.icon:SetPoint("LEFT", x, 0)
