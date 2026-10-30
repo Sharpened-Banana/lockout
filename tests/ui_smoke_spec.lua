@@ -538,6 +538,7 @@ describe("Minimap and Settings", function()
     assert.same({ 1, 90, 1 }, { min.min, min.max, min.step })
     assert.same({ 0.7, 1.5, 0.05 }, { scale.min, scale.max, scale.step })
     assert.equals("checkbox", settingsLog.widgets.showLegacy)
+    assert.equals("Show other saved instances", settingsLog.settings.Lockout_ShowLegacy.label)
 
     n.UI:Show()
     local grid = n.UI.grid
