@@ -31,14 +31,33 @@ local function createFrame()
   return f
 end
 
+-- Globals present before the first reset (stdlib + runner helpers) survive every reset;
+-- anything else (addon globals, per-test API stubs) is removed so specs stay isolated.
+local baseline
+
 function mock.reset()
+  if not baseline then
+    baseline = {}
+    for k in pairs(_G) do baseline[k] = true end
+  else
+    local stale = {}
+    for k in pairs(_G) do
+      if not baseline[k] then stale[#stale + 1] = k end
+    end
+    for _, k in ipairs(stale) do _G[k] = nil end
+  end
+
   timers, frames, seq = {}, {}, 0
   mock.now = 1700000000
   mock.inCombat = false
   mock.player = newPlayer()
   mock.printed = {}
 
-  time = function() return mock.now end
+  time = function(tbl)
+    if tbl then return os.time(tbl) end
+    return mock.now
+  end
+  date = os.date
   C_Timer = {
     After = function(delay, fn)
       seq = seq + 1
