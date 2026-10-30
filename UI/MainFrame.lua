@@ -7,6 +7,7 @@ local UI = { tabButtons = {}, selectedTab = ns.TabOrder[1] }
 ns.UI = UI
 
 local TITLE_H, TOOLBAR_H, PAD = 26, 28, 8
+local GRID_TOP, GRID_BOTTOM = TITLE_H + TOOLBAR_H + 4, PAD + 10
 local DEFAULT_W, DEFAULT_H = 900, 460
 local MIN_W, MIN_H = 640, 320
 local TAB_W = 86
@@ -206,8 +207,8 @@ local function build()
   buildGrip()
 
   grid = ns.Grid.New(frame)
-  grid.frame:SetPoint("TOPLEFT", PAD, -(TITLE_H + TOOLBAR_H + 4))
-  grid.frame:SetPoint("BOTTOMRIGHT", -PAD, PAD + 10)
+  grid.frame:SetPoint("TOPLEFT", PAD, -GRID_TOP)
+  grid.frame:SetPoint("BOTTOMRIGHT", -PAD, GRID_BOTTOM)
   grid:SetOnHeaderClick(onHeaderClick)
   grid:SetOnStarClick(onStarClick)
   grid:SetOnRowClick(onRowClick)
@@ -252,6 +253,16 @@ function UI:SetSelected(guid)
   end
 end
 
+-- OnSizeChanged may not have fired yet on first show: lay out from the current size.
+local function ensureLayout()
+  if grid.width > 0 and grid.height > 0 then return end
+  local w, h = grid.frame:GetSize()
+  if not w or w <= 0 or not h or h <= 0 then
+    w, h = frame:GetWidth() - 2 * PAD, frame:GetHeight() - GRID_TOP - GRID_BOTTOM
+  end
+  grid:Layout(w, h)
+end
+
 function UI:SelectTab(name)
   if not ns.Tabs[name] then return end
   self.selectedTab = name
@@ -261,6 +272,7 @@ end
 function UI:Show()
   if not frame then build() end
   frame:Show()
+  ensureLayout()
   self:Refresh()
 end
 
