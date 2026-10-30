@@ -57,3 +57,13 @@ function Util.Age(seconds)
   if seconds < 86400 then return math.floor(seconds / 3600) .. "h ago" end
   return math.floor(seconds / 86400) .. "d ago"
 end
+
+-- "2d 4h", "3h 5m", "12m"; under a minute reads "<1m".
+function Util.Duration(seconds)
+  if seconds < 60 then return "<1m" end
+  if seconds < 3600 then return math.floor(seconds / 60) .. "m" end
+  if seconds < 86400 then
+    return math.floor(seconds / 3600) .. "h " .. math.floor(seconds % 3600 / 60) .. "m"
+  end
+  return math.floor(seconds / 86400) .. "d " .. math.floor(seconds % 86400 / 3600) .. "h"
+end
