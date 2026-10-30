@@ -1,0 +1,26 @@
+describe("harness", function()
+  local n
+  before_each(function() n = 1 end)
+  it("equals/same", function()
+    assert.equals(1, n)
+    assert.same({ a = { 1, 2 } }, { a = { 1, 2 } })
+  end)
+  it("has_error", function() assert.has_error(function() error("x") end) end)
+end)
+describe("mock", function()
+  local mock = require("tests.wow_mock")
+  it("timers run on advance in order", function()
+    mock.reset(); local seen = {}
+    C_Timer.After(2, function() seen[#seen + 1] = "b" end)
+    C_Timer.After(1, function() seen[#seen + 1] = "a" end)
+    mock.advance(1); assert.same({ "a" }, seen)
+    mock.advance(1); assert.same({ "a", "b" }, seen)
+  end)
+  it("fire dispatches to registered frames", function()
+    mock.reset(); local f = CreateFrame("Frame"); local got
+    f:RegisterEvent("PLAYER_LOGIN")
+    f:SetScript("OnEvent", function(_, e, a) got = e .. (a or "") end)
+    mock.fire("PLAYER_LOGIN", "!"); assert.equals("PLAYER_LOGIN!", got)
+    f:AnyUnknownMethod(); -- universal stub must not error
+  end)
+end)
