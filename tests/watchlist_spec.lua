@@ -54,13 +54,30 @@ describe("Watchlist", function()
     assert.is_false(char.watchlist[2001])
   end)
 
-  it("ScanSet unions defaults and any char's true", function()
+  it("ScanSet unions defaults and any char's watchlist entry, on or off", function()
     local db = { characters = {
       A = { watchlist = { [2001] = true } },
       B = { watchlist = { [2002] = false } },
       C = {},
     } }
-    assert.same({ [1001] = true, [1002] = true, [2001] = true }, W.ScanSet(db))
+    assert.same({ [1001] = true, [1002] = true, [2001] = true, [2002] = true }, W.ScanSet(db))
+  end)
+
+  it("custom item switched off on its only character stays listed while editing", function()
+    local char = { watchlist = {}, bags = { counts = { [2002] = 4 } } }
+    local db = { characters = { x = char } }
+    W.Set(char, 2002, true)
+    W.Set(char, 2002, false)
+    assert.is_false(char.watchlist[2002])
+    assert.truthy(W.ScanSet(db)[2002])
+
+    local e = W.Groups(char, db, true)
+    assert.equals("Other", e[#e].category)
+    assert.same({ { itemID = 2002, count = 4, shown = false } }, e[#e].items)
+    -- not listed outside edit mode
+    for _, group in ipairs(W.Groups(char, db, false)) do
+      for _, item in ipairs(group.items) do assert.truthy(item.itemID ~= 2002) end
+    end
   end)
 
   it("Groups hides off items unless editing", function()

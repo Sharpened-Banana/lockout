@@ -30,9 +30,8 @@ function Watchlist.ScanSet(db)
   local set = {}
   for id in pairs(ns.Consumables.items) do set[id] = true end
   for _, char in pairs(db.characters or {}) do
-    for id, v in pairs(char.watchlist or {}) do
-      if v == true then set[id] = true end
-    end
+    -- Switched-off items stay scanned: they remain listed for editing and keep their counts.
+    for id in pairs(char.watchlist or {}) do set[id] = true end
   end
   return set
 end
