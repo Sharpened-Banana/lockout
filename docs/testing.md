@@ -10,6 +10,8 @@ below needs the real client (Retail 12.0.x). Enable errors first:
 - [ ] Install the addon with its libraries (packaged zip, or a checkout plus the `.pkgmeta` externals under `Libs/`).
 - [ ] Log in on two or more characters (different classes, ideally two realms) so the warband has data.
 - [ ] `/lockout debug` shows no collector failures or "disabled: missing ..." lines on any character.
+- [ ] A checkout in a folder named `lockout` (lower case, as on a case-insensitive filesystem) still loads: the
+      window fills with data and `LockoutDB` is saved on logout.
 
 ## Window and persistence
 
@@ -61,6 +63,8 @@ below needs the real client (Retail 12.0.x). Enable errors first:
 - [ ] Header shows class/spec icon, name-realm, level, ilvl, gold and last seen.
 - [ ] "Forget character" is hidden for the current character; for another it asks to confirm, then removes the
       character and closes the panel.
+- [ ] At the minimum window size (640x320) the panel shows a scroll bar; the wheel and dragging the bar both reach
+      "This week" and "Forget character". Leaving edit mode at the bottom does not leave blank space below the content.
 
 ## Minimap and settings
 
@@ -75,6 +79,8 @@ below needs the real client (Retail 12.0.x). Enable errors first:
 ## Combat
 
 - [ ] Entering combat does not cause collection errors; data refreshes after combat ends.
+- [ ] During an active Mythic+ key, between pulls (out of combat, while Midnight's secret values restrict some APIs),
+      looting, swapping gear and bag changes trigger collection with no Lua errors, and `/lockout debug` stays clean.
 
 ## Verify against the live client
 
@@ -100,6 +106,9 @@ These were assumptions made while building offline. Confirm each one and fix the
       packaging (run the BigWigs packager and inspect `.release/Lockout/Libs`).
 - [ ] Every ID in `Data/*.lua` resolves to the commented name once the tables are filled (see below).
 - [ ] `/lockout debug` prints no failures after a full session.
+- [ ] The Encounter Journal's world-boss pseudo-instance is filtered from the Raids tab. `Core/Season.lua` skips the
+      raid entry named after the expansion (`EXPANSION_NAME<n>`); if Blizzard names it differently (for example after a
+      zone), a stray raid column that is always empty appears. Note its name and filter it.
 
 ## Data still needed
 
