@@ -1,6 +1,6 @@
 local _, ns = ...
 
-local Rows, Reset, Util = ns.Rows, ns.Reset, ns.Util
+local Rows, Reset, Util, Icon = ns.Rows, ns.Reset, ns.Util, ns.Theme.Icon
 
 local WorldBosses = { title = "World Bosses", order = 3 }
 ns.Tabs.WorldBosses = WorldBosses
@@ -49,5 +49,5 @@ function WorldBosses.Cell(char, col, ctx)
   if boss.resetAt then
     tooltip = { { left = boss.name or col.label or col.key, right = "resets in " .. Util.Duration(boss.resetAt - ctx.now) } }
   end
-  return { text = "✓", color = Rows.COLORS.green, tooltip = tooltip }
+  return { text = Icon.check, color = Rows.COLORS.green, tooltip = tooltip }
 end

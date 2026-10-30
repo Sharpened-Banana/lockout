@@ -370,7 +370,7 @@ local function renderEquipment(list, y)
     b.track:SetText(e.track or "")
     local marks = {}
     if e.missingEnchant then marks[#marks + 1] = "|cffff4d4dNo enchant|r" end
-    if (e.emptySockets or 0) > 0 then marks[#marks + 1] = "◇×" .. e.emptySockets end
+    if (e.emptySockets or 0) > 0 then marks[#marks + 1] = Theme.Icon.socket .. "×" .. e.emptySockets end
     b.marks:SetText(table.concat(marks, " "))
     y = y + LINE_H
   end

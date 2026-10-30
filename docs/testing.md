@@ -87,6 +87,10 @@ These were assumptions made while building offline. Confirm each one and fix the
       socket does not count as empty.
 - [ ] Textures resolve (no green squares): `auctionhouse-icon-favorite`, `UI-SortArrow`, `Interface\Buttons\UI-OptionsButton`,
       the ChatFrame size grabber, and class icon coordinates (`CLASS_ICON_TCOORDS`).
+- [ ] Status markers (`Theme.Icon` in UI/Theme.lua) draw as icons, not blanks or boxes: the check
+      `Interface\RaidFrame\ReadyCheck-Ready` (Dungeons and World Bosses cells), the vault-ready bag
+      `Interface\Icons\INV_Misc_Bag_10` (Weekly "Vault" column) and the empty socket
+      `Interface\ItemSocketingFrame\UI-EmptySocket-Prismatic` (detail panel equipment rows).
 - [ ] Drag and drop onto the consumables drop zone receives the item (`GetCursorInfo`).
 - [ ] The Forget confirmation popup passes the character GUID to `OnAccept` (the right character is removed).
 - [ ] The edit-mode checkbox tick is visible.
