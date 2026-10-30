@@ -242,7 +242,7 @@ describe("Detail panel", function()
     assert.equals("645", rows[1].ilvl:GetText())
     assert.equals("Hero 4/6", rows[1].track:GetText())
     assert.truthy(rows[1].marks:GetText():find("No enchant", 1, true))
-    assert.truthy(rows[1].marks:GetText():find("◇×1", 1, true))
+    assert.truthy(rows[1].marks:GetText():find(ns.Theme.Icon.socket .. "×1", 1, true))
     assert.equals("?", rows[2].ilvl:GetText())   -- item not cached
     assert.equals("", rows[2].marks:GetText())
     assert.equals("–", rows[3].ilvl:GetText())   -- empty slot

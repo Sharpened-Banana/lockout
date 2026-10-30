@@ -1,6 +1,6 @@
 local _, ns = ...
 
-local Rows, Reset, Util = ns.Rows, ns.Reset, ns.Util
+local Rows, Reset, Util, Icon = ns.Rows, ns.Reset, ns.Util, ns.Theme.Icon
 
 local MYTHIC_ZERO = 23
 
@@ -32,7 +32,7 @@ function Dungeons.Cell(char, col, ctx)
 
   local parts, tooltip = {}, {}
   if m0 then
-    parts[#parts + 1] = "✓"
+    parts[#parts + 1] = Icon.check
     local right = m0.resetAt and ("resets in " .. Util.Duration(m0.resetAt - ctx.now)) or nil
     tooltip[#tooltip + 1] = { left = "Mythic 0", right = right }
   end

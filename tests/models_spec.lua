@@ -281,7 +281,7 @@ describe("Tab models", function()
         mythicPlus = { seasonBest = { [501] = 12 } },
       }
       local col = colByKey(ns.Tabs.Dungeons, 10)
-      assert.equals("✓ +12", ns.Tabs.Dungeons.Cell(char, col, ctx).text)
+      assert.equals(ns.Theme.Icon.check .. " +12", ns.Tabs.Dungeons.Cell(char, col, ctx).text)
     end)
 
     it("shows only what exists", function()
@@ -290,7 +290,7 @@ describe("Tab models", function()
         instances = { ["10:23"] = { mapID = 10, difficultyID = 23, resetAt = NOW + 100 } },
         mythicPlus = { seasonBest = { [502] = 9 } },
       }
-      assert.equals("✓", ns.Tabs.Dungeons.Cell(char, col10, ctx).text)
+      assert.equals(ns.Theme.Icon.check, ns.Tabs.Dungeons.Cell(char, col10, ctx).text)
       assert.equals("+9", ns.Tabs.Dungeons.Cell(char, col20, ctx).text)
     end)
 
@@ -330,7 +330,7 @@ describe("Tab models", function()
         wb8 = { name = "Old", resetAt = NOW - 1 },
       } }
       local on = ns.Tabs.WorldBosses.Cell(char, { key = "wb7" }, ctx)
-      assert.equals("✓", on.text)
+      assert.equals(ns.Theme.Icon.check, on.text)
       assert.same(ns.Rows.COLORS.green, on.color)
       assert.equals("resets in 1h 0m", on.tooltip[1].right)
       assert.equals("–", ns.Tabs.WorldBosses.Cell(char, { key = "wb8" }, ctx).text)
@@ -380,13 +380,13 @@ describe("Tab models", function()
       local T = Enum.WeeklyRewardChestThresholdType
       local acts = { activity(T.Raid, 1, 2, 2, 661), activity(T.Raid, 2, 4, 1, nil), activity(T.Raid, 3, 6, 0, nil) }
       local char = { vault = vault(NOW - 10, false, acts) }
-      assert.equals("🎁", cell(char, "ready").text)
+      assert.equals(ns.Theme.Icon.vault, cell(char, "ready").text)
       -- progress belongs to the finished week
       assert.equals("0/3", cell(char, "vaultRaid").text)
       char = { vault = vault(NOW + 10, false, acts) }
       assert.equals("–", cell(char, "ready").text)
       char = { vault = vault(NOW + 10, true, acts) }
-      assert.equals("🎁", cell(char, "ready").text)
+      assert.equals(ns.Theme.Icon.vault, cell(char, "ready").text)
     end)
 
     it("key name from season", function()
@@ -457,6 +457,17 @@ describe("Tab models", function()
       for _, col in ipairs(tab.Columns(ctx)) do
         assert.equals("–", tab.Cell({ meta = { name = "X" } }, col, ctx).text)
       end
+    end
+  end)
+end)
+
+describe("Theme status markers", function()
+  it("are texture markup, not font glyphs", function()
+    local ns = load()
+    for _, key in ipairs({ "check", "vault", "socket" }) do
+      local markup = ns.Theme.Icon[key]
+      assert.equals("string", type(markup))
+      assert.truthy(markup:find("^|T[^|]+|t$"))
     end
   end)
 end)

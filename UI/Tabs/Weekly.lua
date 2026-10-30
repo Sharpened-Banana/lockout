@@ -1,6 +1,6 @@
 local _, ns = ...
 
-local Rows, Reset, Util = ns.Rows, ns.Reset, ns.Util
+local Rows, Reset, Util, Icon = ns.Rows, ns.Reset, ns.Util, ns.Theme.Icon
 
 local Weekly = { title = "Weekly", order = 4 }
 ns.Tabs.Weekly = Weekly
@@ -92,7 +92,7 @@ end
 
 local function readyCell(char, ctx)
   if not Reset.Vault(char.vault, ctx.now).ready then return { text = Rows.EMPTY } end
-  return { text = "🎁", tooltip = { { left = "Great Vault reward waiting" } } }
+  return { text = Icon.vault, tooltip = { { left = "Great Vault reward waiting" } } }
 end
 
 function Weekly.Cell(char, col, ctx)

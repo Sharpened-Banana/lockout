@@ -142,7 +142,7 @@ describe("UI smoke", function()
     ns.UI:SelectTab("Dungeons")
     assert.equals(1, #grid.columns)
     assert.equals("Crypt", grid.dataHeaders[1].label:GetText())
-    assert.equals("✓ +12", grid.slots[1].cells[1].text:GetText())
+    assert.equals(ns.Theme.Icon.check .. " +12", grid.slots[1].cells[1].text:GetText())
 
     ns.UI:SelectTab("Raids")
     -- no season raids from the EJ stub; the legacy column comes from Thrall's lockout

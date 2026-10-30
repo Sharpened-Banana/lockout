@@ -17,6 +17,13 @@ ns.Theme = Theme
 
 Theme.TEXTURE = "Interface\\Buttons\\WHITE8x8"
 
+-- Status markers as texture markup: the UI fonts have no dingbat or emoji glyphs.
+Theme.Icon = {
+  check = "|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t",
+  vault = "|TInterface\\Icons\\INV_Misc_Bag_10:14|t",
+  socket = "|TInterface\\ItemSocketingFrame\\UI-EmptySocket-Prismatic:12|t",
+}
+
 local BACKDROP = { bgFile = Theme.TEXTURE, edgeFile = Theme.TEXTURE, edgeSize = 1 }
 
 -- Flat fill with a 1px border. `frame` must be created with "BackdropTemplate".
