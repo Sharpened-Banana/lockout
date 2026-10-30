@@ -47,7 +47,7 @@ local function register()
 
   addSlider("Lockout_MinLevel", "minLevel", "Minimum character level",
     "Characters below this level are hidden.", 10, 1, 90, 1)
-  addCheckbox("Lockout_ShowLegacy", "showLegacy", s, "Show legacy raids and dungeons",
+  addCheckbox("Lockout_ShowLegacy", "showLegacy", s, "Show other saved instances",
     "Include lockouts that are not part of the current season.", false)
   addSlider("Lockout_Scale", "scale", "Window scale", "Size of the Lockout window.", 1, 0.7, 1.5, 0.05)
 
