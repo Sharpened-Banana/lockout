@@ -4,14 +4,15 @@ local Reset = ns.Reset
 
 ns.RegisterCollector({
   name = "MythicPlus",
-  events = { "CHALLENGE_MODE_COMPLETED", "BAG_UPDATE_DELAYED", "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE" },
+  events = { "CHALLENGE_MODE_COMPLETED", "BAG_UPDATE_DELAYED", "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE", "CHALLENGE_MODE_MAPS_UPDATE" },
   requires = {
     "C_MythicPlus.GetOwnedKeystoneChallengeMapID", "C_MythicPlus.GetOwnedKeystoneLevel",
     "C_MythicPlus.GetRunHistory", "C_PlayerInfo.GetPlayerMythicPlusRatingSummary",
     "C_DateAndTime.GetSecondsUntilWeeklyReset",
   },
 
-  -- Run history and rating are only populated once the client has been asked for map info.
+  -- Run history and rating are only populated once the client has been asked for map info;
+  -- the answer arrives asynchronously as CHALLENGE_MODE_MAPS_UPDATE.
   OnLogin = function()
     if C_MythicPlus.RequestMapInfo then C_MythicPlus.RequestMapInfo() end
   end,
@@ -26,8 +27,8 @@ ns.RegisterCollector({
     local runs, weeklyBest = {}, 0
     for _, run in ipairs(C_MythicPlus.GetRunHistory(false, true) or {}) do
       runs[#runs + 1] = { challengeMapID = run.mapChallengeModeID, level = run.level, completed = run.completed }
-      -- Vault semantics: only completed runs count toward the weekly best.
-      if run.completed == true and run.level and run.level > weeklyBest then weeklyBest = run.level end
+      -- Like the Great Vault row, every recorded run counts (completed == false means finished over time).
+      if run.level and run.level > weeklyBest then weeklyBest = run.level end
     end
 
     local summary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
