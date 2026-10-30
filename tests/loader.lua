@@ -34,9 +34,12 @@ loader.ALL = existing({
   "UI/Grid.lua", "UI/DetailPanel.lua", "UI/MainFrame.lua", "UI/Minimap.lua", "UI/Settings.lua",
 })
 
--- load(files?) -> ns. An explicit list must exist on disk; the default is loader.ALL.
-function loader.load(files)
+-- load(files?, install?) -> ns. An explicit list must exist on disk; the default is loader.ALL.
+-- `install` runs after the reset and before any file loads, so API stubs are visible to
+-- load-time checks such as a collector's `requires`.
+function loader.load(files, install)
   mock.reset()
+  if install then install() end
   local ns = {}
   for _, path in ipairs(files or loader.ALL) do
     local chunk, err = loadfile(path)
