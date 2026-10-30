@@ -11,6 +11,11 @@ ns.RegisterCollector({
     "C_DateAndTime.GetSecondsUntilWeeklyReset",
   },
 
+  -- Run history and rating are only populated once the client has been asked for map info.
+  OnLogin = function()
+    if C_MythicPlus.RequestMapInfo then C_MythicPlus.RequestMapInfo() end
+  end,
+
   Collect = function(_, record, now)
     local mapID = C_MythicPlus.GetOwnedKeystoneChallengeMapID()
     local key
@@ -21,7 +26,8 @@ ns.RegisterCollector({
     local runs, weeklyBest = {}, 0
     for _, run in ipairs(C_MythicPlus.GetRunHistory(false, true) or {}) do
       runs[#runs + 1] = { challengeMapID = run.mapChallengeModeID, level = run.level, completed = run.completed }
-      if run.level and run.level > weeklyBest then weeklyBest = run.level end
+      -- Vault semantics: only completed runs count toward the weekly best.
+      if run.completed == true and run.level and run.level > weeklyBest then weeklyBest = run.level end
     end
 
     local summary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
