@@ -134,4 +134,5 @@ end
 
 for _, f in ipairs(failures) do write("FAIL ", f, "\n") end
 write(passed, " passed, ", failed, " failed\n")
-os.exit(failed > 0 and 1 or 0)
+if passed + failed == 0 then write("no tests ran\n") end
+os.exit((failed > 0 or passed + failed == 0) and 1 or 0)
