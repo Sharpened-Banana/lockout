@@ -296,6 +296,53 @@ describe("UI smoke", function()
     assert.equals(27, #grid.rows)
   end)
 
+  it("lays out the grid on first show without a size event", function()
+    ns.UI:Show()
+    local grid = ns.UI.grid
+    assert.truthy(grid.width > 0 and grid.height > 0)
+    assert.truthy(#grid.slots > 0)
+    assert.equals("Thrall", grid.slots[1].name:GetText())
+  end)
+
+  it("switching column sets scrolls back to the first column", function()
+    local grid = ns.Grid.New(UIParent)
+    -- Behave like the client slider: SetMinMaxValues clamps the value and reports the change.
+    local hbar = grid.hbar
+    hbar.SetMinMaxValues = function(self, lo, hi)
+      self.lo, self.hi = lo, hi
+      local v = self:GetValue()
+      local clamped = math.max(lo, math.min(hi, v))
+      if clamped ~= v then
+        self:SetValue(clamped)
+        self:GetScript("OnValueChanged")(self, clamped)
+      end
+    end
+    local function cols(prefix, n)
+      local out = {}
+      for i = 1, n do out[i] = { key = prefix .. i, label = prefix .. i, width = 80 } end
+      return out
+    end
+    grid:SetRows({})
+    grid:Layout(400, 300)          -- data view is 400 - 2 - 190 - 8 = 200 wide
+    grid:SetColumns(cols("a", 10)) -- 800 wide: max offset 600
+    grid:Refresh()
+    grid:ScrollHorizontal(500)
+    assert.equals(500, hbar:GetValue())
+
+    grid:SetColumns(cols("b", 6))  -- 480 wide: max offset 280, below the old value
+    grid:Refresh()
+    assert.equals(0, grid.hoffset)
+    assert.equals(0, hbar:GetValue())
+    assert.equals(0, grid.scroll:GetHorizontalScroll())
+    assert.equals(280, hbar.hi)
+
+    -- the same column keys keep the scroll position
+    grid:ScrollHorizontal(100)
+    grid:SetColumns(cols("b", 6))
+    grid:Refresh()
+    assert.equals(100, grid.hoffset)
+  end)
+
   it("cell hover shows the cell tooltip", function()
     local grid = open()
     local cell = grid.slots[1].cells[1]

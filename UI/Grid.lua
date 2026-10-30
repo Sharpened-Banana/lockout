@@ -53,6 +53,7 @@ local function newBar(parent, orientation)
   bar:SetThumbTexture(thumb)
   bar:SetMinMaxValues(0, 0)
   bar:SetValue(0)
+  bar:EnableMouse(true)
   return bar
 end
 
@@ -282,7 +283,11 @@ function Grid:SetColumns(cols)
   local signature = table.concat(keys, "\1")
   if signature ~= self.signature then
     self.signature = signature
+    -- Zero the slider too: otherwise Refresh's SetMinMaxValues clamps its old value and
+    -- OnValueChanged writes that back into hoffset.
     self.hoffset = 0
+    self.hbar:SetValue(0)
+    self.scroll:SetHorizontalScroll(0)
   end
   self.columns = cols
 end
@@ -350,8 +355,8 @@ end
 function Grid:Refresh()
   self.maxOffset = math.max(0, #self.rows - math.floor(self.bodyHeight / ROW_H))
   self.offset = clamp(self.offset, 0, self.maxOffset)
+  self.vbar:SetValue(self.offset) -- value first: offset already fits the old range
   self.vbar:SetMinMaxValues(0, self.maxOffset)
-  self.vbar:SetValue(self.offset)
   self.vbar:SetShown(self.maxOffset > 0)
 
   local x = 0
@@ -363,8 +368,8 @@ function Grid:Refresh()
   local view = math.max(0, self.width - 2 * EDGE - NAME_W - BAR)
   self.maxHOffset = math.max(0, x - view)
   self.hoffset = clamp(self.hoffset, 0, self.maxHOffset)
-  self.hbar:SetMinMaxValues(0, self.maxHOffset)
   self.hbar:SetValue(self.hoffset)
+  self.hbar:SetMinMaxValues(0, self.maxHOffset)
   self.hbar:SetShown(self.maxHOffset > 0)
 
   local contentW = math.max(x, view, 1)
