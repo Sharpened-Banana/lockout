@@ -1,0 +1,44 @@
+std = "lua51"
+max_line_length = false
+exclude_files = { "Libs/", ".release/", ".superpowers/" }
+
+globals = {
+  "LockoutDB", "SLASH_LOCKOUT1", "SLASH_LOCKOUT2", "SlashCmdList",
+  "LockoutMainFrame", "UISpecialFrames", "StaticPopupDialogs",
+}
+
+-- WoW API / globals used by the addon (extend as tasks use more).
+read_globals = {
+  "time", "date", "C_Timer", "CreateFrame", "InCombatLockdown", "Enum",
+  "UnitGUID", "UnitName", "UnitClass", "UnitLevel", "GetRealmName",
+  "ITEM_UPGRADE_TOOLTIP_FORMAT_STRING",
+  -- Character / Equipment
+  "GetAverageItemLevel", "GetSpecialization", "GetSpecializationInfo", "C_SpecializationInfo", "GetMoney",
+  "GetInventoryItemLink", "C_TooltipInfo", "C_Item",
+  -- Season
+  "GetBuildInfo", "LE_EXPANSION_LEVEL_CURRENT", "C_ChallengeMode",
+  "EJ_GetNumTiers", "EJ_GetTierInfo", "EJ_GetCurrentTier", "EJ_SelectTier",
+  "EJ_GetInstanceByIndex", "EJ_GetInstanceInfo", "EJ_GetEncounterInfoByIndex",
+  -- Instances / WorldBosses
+  "GetNumSavedInstances", "GetSavedInstanceInfo", "GetSavedInstanceEncounterInfo", "RequestRaidInfo",
+  "GetNumSavedWorldBosses", "GetSavedWorldBossInfo", "C_QuestLog", "C_DateAndTime",
+  -- Vault / MythicPlus / Delves
+  "C_WeeklyRewards", "C_MythicPlus", "C_PlayerInfo", "C_CurrencyInfo",
+  -- Bags
+  "C_Container",
+  -- UI
+  "UIParent", "GameTooltip", "C_ClassColor", "IsShiftKeyDown", "GameFontHighlightSmall",
+  -- Detail panel
+  "GetCursorInfo", "ClearCursor", "StaticPopup_Show", "GetSpecializationInfoByID", "CLASS_ICON_TCOORDS",
+  "GetMoneyString", "ACCEPT", "CANCEL",
+  -- Minimap / Settings
+  "LibStub", "Settings", "MinimalSliderWithSteppersMixin",
+}
+
+-- Tests and the mock legitimately define WoW globals and busted-style helpers.
+files["tests/"] = {
+  std = "+busted",
+  globals = { "assert", "describe", "it", "before_each" },
+  allow_defined_top = true,
+  ignore = { "111", "112", "113", "121", "122" },
+}
