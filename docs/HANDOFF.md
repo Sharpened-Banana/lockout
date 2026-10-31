@@ -10,6 +10,11 @@ For a local Claude Code session (or a human) picking this up on a machine that c
 - Design spec: `docs/superpowers/specs/2026-10-30-lockout-addon-design.md`. This is the source of truth for intent.
 - Implementation plan: `docs/superpowers/plans/2026-10-30-lockout-addon.md`. Its Global Constraints still apply to new work.
 
+## Warband scope (by design, not a bug)
+
+- **Login required:** a character appears only after it has logged in once with the addon enabled. Addons can't read other characters from the server. Each character's data is as fresh as its last login, and the reset logic still expires lockouts while that character is offline.
+- **One WoW game account:** `LockoutDB` is account-wide SavedVariables, stored per WoW game account (`WTF/Account/<name>/`). Characters on another WoW license under the same Battle.net account (WoW1, WoW2) can't be seen, even though the game counts them in the same warband. All realms on one license do show.
+
 ## What the local session should do first
 
 1. **Install it.**
