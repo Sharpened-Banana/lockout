@@ -71,6 +71,7 @@ below needs the real client (Retail 12.0.x). Enable errors first:
 ## Minimap and settings
 
 - [ ] The minimap button appears; left-click toggles the window, right-click opens the settings panel.
+- [ ] The blue padlock icon (`Media/Icon.tga`) shows on the minimap button and in the AddOns list, not a green "missing texture" square.
 - [ ] Tooltip shows "Vault ready: N characters" and "Highest key: +L Dungeon (Character)".
 - [ ] `/lockout config` opens Options > AddOns > Lockout.
 - [ ] The settings panel has: minimum level (1-90), show minimap button, window scale

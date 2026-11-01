@@ -4,7 +4,7 @@
 ## Author: lonezebra
 ## Version: @project-version@
 ## SavedVariables: LockoutDB
-## IconTexture: Interface\Icons\INV_Misc_Key_14
+## IconTexture: Interface\AddOns\Lockout\Media\Icon
 
 embeds.xml
 

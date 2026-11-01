@@ -653,7 +653,7 @@ describe("Minimap and Settings", function()
     n.Fire("DB_READY")
     assert.equals("Lockout", created.name)
     assert.equals("launcher", created.obj.type)
-    assert.equals("Interface\\Icons\\INV_Misc_Key_14", created.obj.icon)
+    assert.equals("Interface\\AddOns\\Lockout\\Media\\Icon", created.obj.icon)
     assert.equals("Lockout", registered.name)
     assert.equals(n.db.settings.minimap, registered.db)
 

@@ -5,7 +5,7 @@ local Minimap = {}
 ns.Minimap = Minimap
 
 local NAME = "Lockout"
-local ICON = "Interface\\Icons\\INV_Misc_Key_14"
+local ICON = "Interface\\AddOns\\Lockout\\Media\\Icon" -- Media/Icon.tga, drawn from Media/Icon.svg
 
 -- Pure: how many characters have a vault ready, and the highest owned keystone.
 -- Respects the same minimum-level filter as the main window.
