@@ -31,7 +31,9 @@ below needs the real client (Retail 12.0.x). Enable errors first:
       (log in again, nothing reappears).
 - [ ] Dungeons tab: a saved M0 dungeon shows a check, season-best M+ level appears per dungeon.
 - [ ] World Bosses tab: a killed weekly boss shows a check with its reset tooltip.
-- [ ] With "show other saved instances" on, older raids a character is saved to get extra columns.
+- [ ] The Legacy tab lists each older raid any shown character is saved to as a row, with one class-colored column per character. The Raids tab shows only season raids.
+- [ ] On the Legacy tab, the frozen column header reads "Raid" with no sort arrows, clicking a raid name does nothing, and clicking a cell opens that character's detail panel.
+- [ ] At the minimum window width, the five tab buttons don't overlap the "Current realm" toggle.
 - [ ] Extended lockout: with reset = 0 the cell still displays sensibly (no "resets in 0s" or error).
 
 ## Weekly
@@ -71,7 +73,7 @@ below needs the real client (Retail 12.0.x). Enable errors first:
 - [ ] The minimap button appears; left-click toggles the window, right-click opens the settings panel.
 - [ ] Tooltip shows "Vault ready: N characters" and "Highest key: +L Dungeon (Character)".
 - [ ] `/lockout config` opens Options > AddOns > Lockout.
-- [ ] The settings panel has: minimum level (1-90), show minimap button, show other saved instances, window scale
+- [ ] The settings panel has: minimum level (1-90), show minimap button, window scale
       (0.7-1.5). Each change takes effect immediately; hiding the button hides it at once and persists across `/reload`.
 - [ ] Test with the libraries absent (delete `Libs/`): no Lua error, `/lockout debug` shows "minimap libs missing",
       the window and `/lockout config` still work.

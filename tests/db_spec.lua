@@ -9,7 +9,7 @@ describe("DB", function()
 
   it("fresh init", function()
     local db = ns.DB:Init(nil)
-    assert.equals(1, LockoutDB.schema)
+    assert.equals(2, LockoutDB.schema)
     assert.equals(10, LockoutDB.settings.minLevel)
     assert.equals("ilvl", LockoutDB.settings.sortKey)
     assert.equals(db, LockoutDB)
@@ -34,6 +34,13 @@ describe("DB", function()
     a.settings.favorites["x"] = true
     local b = ns.DB:Init(nil)
     assert.is_nil(b.settings.favorites["x"])
+  end)
+
+  it("schema 2 drops the legacy-columns setting", function()
+    ns.DB:Init({ schema = 1, settings = { showLegacy = true, minLevel = 5 }, characters = {} })
+    assert.equals(2, LockoutDB.schema)
+    assert.is_nil(LockoutDB.settings.showLegacy)
+    assert.equals(5, LockoutDB.settings.minLevel)
   end)
 
   it("runs migrations in order", function()

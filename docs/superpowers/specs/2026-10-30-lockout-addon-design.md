@@ -70,7 +70,7 @@ Lockout/
     Theme.lua                colors, fonts, backdrop helpers
     MainFrame.lua            window, tabs, filter bar, persistence, Esc-close
     Grid.lua                 generic virtualized row/column grid + sorting
-    Tabs/Raids.lua  Tabs/Dungeons.lua  Tabs/WorldBosses.lua  Tabs/Weekly.lua
+    Tabs/Raids.lua  Tabs/Dungeons.lua  Tabs/WorldBosses.lua  Tabs/Weekly.lua  Tabs/Legacy.lua
     DetailPanel.lua          character detail panel incl. watchlist editing
     Minimap.lua              LDB object + LibDBIcon button
     Settings.lua             Blizzard Settings panel
@@ -126,8 +126,8 @@ SavedVariables (account-wide): `LockoutDB`.
 
 ```lua
 LockoutDB = {
-  schema   = 1,
-  settings = { minLevel = 10, minimap = { hide = false }, showLegacy = false,
+  schema   = 2,
+  settings = { minLevel = 10, minimap = { hide = false },
                scale = 1.0, window = { point, x, y, w, h }, favorites = { [guid] = true },
                currentRealmOnly = false },
   characters = {
@@ -215,9 +215,8 @@ All functions are pure and take `now` explicitly.
 - Click row → open detail panel for that character.
 
 ### Tabs (each provides columns + cell renderer + tooltip)
-- **Raids**: one column per current-season raid (from `Data/Content.lua`);
-  with `showLegacy`, extra columns for any other raid any character is saved
-  to. Cell: difficulty badges `L/N/H/M k/n`; full clear green, partial yellow;
+- **Raids**: one column per current-season raid (from `Data/Content.lua`).
+  Cell: difficulty badges `L/N/H/M k/n`; full clear green, partial yellow;
   empty if not saved. Tooltip: per-difficulty boss list with killed/alive and
   time until reset.
 - **Dungeons**: one column per season dungeon. Cell: ✓ if M0-saved, plus
@@ -227,6 +226,11 @@ All functions are pure and take `now` explicitly.
 - **Weekly**: columns Vault Raid, Vault Dungeons, Vault World (each `x/3`
   with reward ilvl), Key, Rating, Delve currencies, 🎁 if unclaimed.
   Tooltip: per-slot threshold/progress/reward level.
+- **Legacy** (added 2026-11-01, replaces the `showLegacy` setting): one row per
+  non-season raid any shown character is saved to, one class-colored column per
+  shown character (name filter, realm toggle and sort apply). Cell as on the
+  Raids tab. Clicking a cell opens that character's detail panel. Schema 2
+  drops the old setting.
 
 ### Detail panel (`UI/DetailPanel.lua`)
 Docked to the right of the grid; closes with its own button or by clicking

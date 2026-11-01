@@ -91,7 +91,6 @@ describe("UI smoke", function()
     ns = loader.load(nil, install)
     ns.DB:Init(nil)
     seed(ns.db, mock.now)
-    ns.db.settings.showLegacy = true
     -- Record row clicks on their way to the real detail panel.
     detail = {}
     local toggle = ns.Detail.Toggle
@@ -123,9 +122,10 @@ describe("UI smoke", function()
       ns.UI:SelectTab(name)
       assert.equals(name, ns.UI.selectedTab)
       ns.UI:Refresh()
-      assert.equals(28, #grid.rows)
+      assert.equals(name == "Legacy" and 1 or 28, #grid.rows)
     end
     -- default sort: ilvl descending
+    ns.UI:SelectTab("Raids")
     assert.equals("Thrall", grid.slots[1].name:GetText())
     assert.equals("80", grid.slots[1].level:GetText())
     assert.equals("640", grid.slots[1].ilvl:GetText())
@@ -145,10 +145,64 @@ describe("UI smoke", function()
     assert.equals(ns.Theme.Icon.check .. " +12", grid.slots[1].cells[1].text:GetText())
 
     ns.UI:SelectTab("Raids")
-    -- no season raids from the EJ stub; the legacy column comes from Thrall's lockout
+    -- no season raids from the EJ stub; Thrall's other raid lives on the Legacy tab
+    assert.equals(0, #grid.columns)
+  end)
+
+  it("legacy tab lists raids down the side and characters across", function()
+    local grid = open()
+    ns.UI:SelectTab("Legacy")
+    assert.same({ "Alpha Keep" }, labels(grid.rows))
+    assert.equals(28, #grid.columns)
+    assert.equals("Thrall", grid.dataHeaders[1].label:GetText())
+    assert.same({ 0, 0.44, 0.87 }, { grid.dataHeaders[1].label:GetTextColor() })
+    assert.equals("Jaina", grid.dataHeaders[2].label:GetText())
+
+    local slot = grid.slots[1]
+    assert.equals("Alpha Keep", slot.name:GetText())
+    assert.same({ 0.9, 0.9, 0.9 }, { slot.name:GetTextColor() })
+    assert.is_false(slot.star:IsShown())
+    assert.is_false(slot.level:IsShown())
+    assert.is_false(slot.ilvl:IsShown())
+    assert.is_false(slot.left.deco.selected:IsShown())
+    assert.equals("H 4/8", slot.cells[1].text:GetText())
+    assert.equals("–", slot.cells[2].text:GetText())
+
+    -- the frozen header names the rows and does not sort
+    assert.equals("Raid", grid.headers.name.label:GetText())
+    assert.is_false(grid.headers.level:IsShown())
+    assert.is_false(grid.headers.ilvl:IsShown())
+    assert.is_false(grid.headers.name.arrow:IsShown())
+    click(grid.headers.name)
+    assert.equals("ilvl", ns.db.settings.sortKey)
+
+    -- a raid has no detail panel; a cell opens its character's
+    click(slot.left)
+    assert.same({}, detail)
+    click(slot.cells[2])
+    assert.same({ "Player-2-0002" }, detail)
+    assert.equals("Player-2-0002", ns.UI.selectedGuid)
+
+    -- the name filter narrows the character columns
+    ns.UI.filter:SetText("thr")
+    ns.UI.filter:GetScript("OnTextChanged")(ns.UI.filter, true)
     assert.equals(1, #grid.columns)
-    assert.equals("H 4/8", grid.slots[1].cells[1].text:GetText())
-    assert.equals("–", grid.slots[2].cells[1].text:GetText())
+    ns.UI.filter:SetText("jai")
+    ns.UI.filter:GetScript("OnTextChanged")(ns.UI.filter, true)
+    assert.equals(0, #grid.rows)
+
+    -- back on a character tab, the character column returns
+    ns.UI.filter:SetText("")
+    ns.UI.filter:GetScript("OnTextChanged")(ns.UI.filter, true)
+    ns.UI:SelectTab("Raids")
+    assert.equals("Character", grid.headers.name.label:GetText())
+    assert.is_true(grid.headers.level:IsShown())
+    assert.is_true(grid.headers.ilvl:IsShown())
+    assert.is_true(grid.slots[1].star:IsShown())
+    assert.is_true(grid.slots[1].level:IsShown())
+    assert.equals("Thrall", grid.slots[1].name:GetText())
+    click(grid.headers.name)
+    assert.equals("name", ns.db.settings.sortKey)
   end)
 
   it("unknown tab names are ignored", function()
@@ -242,6 +296,7 @@ describe("UI smoke", function()
 
   it("row and cell clicks toggle the detail panel", function()
     local grid = open()
+    ns.UI:SelectTab("Dungeons")
     click(grid.slots[1].left)
     assert.same({ "Player-1-0001" }, detail)
     assert.equals("Player-1-0001", ns.UI.selectedGuid)
@@ -264,6 +319,7 @@ describe("UI smoke", function()
 
   it("detail panel keeps the grid selection in step", function()
     local grid = open()
+    ns.UI:SelectTab("Dungeons")
     local function selected() return grid.slots[2].left.deco.selected:IsShown() end
     click(grid.slots[2].left)  -- Jaina
     local panel = ns.Detail.panel
@@ -345,6 +401,7 @@ describe("UI smoke", function()
 
   it("cell hover shows the cell tooltip", function()
     local grid = open()
+    ns.UI:SelectTab("Legacy")
     local cell = grid.slots[1].cells[1]
     cell:GetScript("OnEnter")(cell)
     assert.equals("Alpha Keep", tooltipLines[1])
@@ -393,9 +450,9 @@ describe("UI smoke", function()
     assert.same({ point = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 40, y = 500, w = 900, h = 460 },
       ns.db.settings.window)
 
-    frame:SetSize(700, 350)
+    frame:SetSize(760, 350)
     ns.UI.grip:GetScript("OnMouseUp")(ns.UI.grip)
-    assert.equals(700, ns.db.settings.window.w)
+    assert.equals(760, ns.db.settings.window.w)
     assert.equals(350, ns.db.settings.window.h)
 
     -- a fresh session restores it
@@ -403,7 +460,7 @@ describe("UI smoke", function()
     ns = loader.load(nil, install)
     ns.DB:Init(saved)
     ns.UI:Show()
-    assert.equals(700, ns.UI.frame:GetWidth())
+    assert.equals(760, ns.UI.frame:GetWidth())
     assert.same({ "TOPLEFT", UIParent, "BOTTOMLEFT", 40, 500 }, { ns.UI.frame:GetPoint(1) })
   end)
 
@@ -537,8 +594,7 @@ describe("Minimap and Settings", function()
     local min, scale = settingsLog.widgets.minLevel, settingsLog.widgets.scale
     assert.same({ 1, 90, 1 }, { min.min, min.max, min.step })
     assert.same({ 0.7, 1.5, 0.05 }, { scale.min, scale.max, scale.step })
-    assert.equals("checkbox", settingsLog.widgets.showLegacy)
-    assert.equals("Show other saved instances", settingsLog.settings.Lockout_ShowLegacy.label)
+    assert.is_nil(settingsLog.settings.Lockout_ShowLegacy)
 
     n.UI:Show()
     local grid = n.UI.grid
@@ -553,8 +609,6 @@ describe("Minimap and Settings", function()
     assert.equals(1.25, n.db.settings.scale)
     assert.equals(1.25, n.UI.frame:GetScale())
 
-    settingsLog.settings.Lockout_ShowLegacy:Set(false)
-    assert.is_false(n.db.settings.showLegacy)
     for _, line in ipairs(n.log) do assert.is_nil(line:find("callback failed", 1, true)) end
   end)
 

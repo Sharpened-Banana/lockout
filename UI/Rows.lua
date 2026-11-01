@@ -5,7 +5,7 @@ local Rows = {}
 ns.Rows = Rows
 
 ns.Tabs = ns.Tabs or {}
-ns.TabOrder = { "Raids", "Dungeons", "WorldBosses", "Weekly" }
+ns.TabOrder = { "Raids", "Dungeons", "WorldBosses", "Weekly", "Legacy" }
 
 -- Cell text when there is nothing to show.
 Rows.EMPTY = "–"

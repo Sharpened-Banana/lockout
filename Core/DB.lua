@@ -3,14 +3,16 @@ local _, ns = ...
 local DB = {}
 ns.DB = DB
 
-DB.SCHEMA = 1
+DB.SCHEMA = 2
 DB.migrations = {} -- migrations[n] upgrades schema n-1 -> n
+
+-- Other raids moved from opt-in Raids columns to their own tab.
+DB.migrations[2] = function(db) db.settings.showLegacy = nil end
 
 local function defaults()
   return {
     minLevel = 10,
     minimap = { hide = false },
-    showLegacy = false,
     scale = 1.0,
     window = {},
     favorites = {},

@@ -76,7 +76,7 @@ Collectors (logged-in character only)  →  LockoutDB.characters[GUID]  →  pur
   - Character, Equipment, Instances, WorldBosses, Vault, MythicPlus, Delves, Bags.
   - Bags reads only the backpack, bags 1–4 and the reagent bag, never any bank.
   - Instance keys are `"<mapID>:<difficultyID>"`; Mythic 0 is difficulty 23.
-- **`UI/Rows.lua` and `UI/Tabs/*`:** pure display models. Each tab provides `Columns(ctx)` and `Cell(char, col, ctx) → { text, color, tooltip }`. `"–"` means nothing to show.
+- **`UI/Rows.lua` and `UI/Tabs/*`:** pure display models. Each tab provides `Columns(ctx)` and `Cell(char, col, ctx) → { text, color, tooltip }`. `"–"` means nothing to show. A tab with `Rows(ctx)` (Legacy) lists its own rows instead of characters: it gets the filtered, sorted character rows as `ctx.characters`, its cells are `Cell(row, col, ctx)`, and its `rowHeader` puts the grid in plain-row mode (no star, level, ilvl or sorting).
 - **`UI/Theme.lua`, `Grid.lua`, `MainFrame.lua`, `DetailPanel.lua`, `Minimap.lua`, `Settings.lua`:** rendering only.
   - **Load order:** the TOC order matters. `tests/toc_spec.lua` checks that it matches `tests/loader.lua`.
 

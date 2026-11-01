@@ -9,7 +9,7 @@ ns.UI = UI
 local TITLE_H, TOOLBAR_H, PAD = 26, 28, 8
 local GRID_TOP, GRID_BOTTOM = TITLE_H + TOOLBAR_H + 4, PAD + 10
 local DEFAULT_W, DEFAULT_H = 900, 460
-local MIN_W, MIN_H = 640, 320
+local MIN_W, MIN_H = 740, 320 -- wide enough for five tabs beside the realm toggle and filter
 local TAB_W = 86
 local EMPTY_SEASON = { raids = {}, dungeons = {}, mplus = {} }
 
@@ -71,11 +71,14 @@ local function onStarClick(row)
 end
 
 -- The detail panel owns the selection while it exists: it sets it on open and clears it on close.
-local function onRowClick(row)
+-- Rows that are not characters open the character of the clicked column, if any.
+local function onRowClick(row, col)
+  local guid = row.guid or (col and col.guid)
+  if not guid then return end
   if ns.Detail then
-    ns.Detail:Toggle(row.guid)
+    ns.Detail:Toggle(guid)
   else
-    UI:SetSelected(UI.selectedGuid ~= row.guid and row.guid or nil)
+    UI:SetSelected(UI.selectedGuid ~= guid and guid or nil)
   end
 end
 
@@ -230,13 +233,16 @@ function UI:Refresh()
     favorites = s.favorites, sortKey = s.sortKey, sortDesc = s.sortDesc,
   })
   for _, row in ipairs(rows) do row.favorite = s.favorites[row.guid] and true or false end
+  ctx.characters = rows
+  if tab.Rows then rows = tab.Rows(ctx) end
 
+  grid:SetRowHeader(tab.Rows and (tab.rowHeader or "") or nil)
   grid:SetColumns(tab.Columns(ctx))
   grid:SetRows(rows)
   grid:SetSort(s.sortKey, s.sortDesc)
   grid:SetSelected(self.selectedGuid)
   grid:SetCellProvider(function(row, col)
-    local ok, cell = pcall(tab.Cell, row.char, col, ctx)
+    local ok, cell = pcall(tab.Cell, tab.Rows and row or row.char, col, ctx)
     if ok and cell then return cell end
     ns.LogOnce("cell:" .. tabName, "%s cell failed: %s", tabName, tostring(cell))
     return { text = ns.Rows.EMPTY }

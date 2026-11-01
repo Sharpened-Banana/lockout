@@ -2,6 +2,7 @@ local _, ns = ...
 
 -- Generic character grid: a frozen name column on the left, data columns in a horizontal
 -- ScrollFrame, and a fixed pool of row frames recycled by a vertical scroll offset.
+-- With a row header set, rows are plain labels (no star, level, ilvl or sorting).
 local Theme = ns.Theme
 local ROW_H, HEADER_H, NAME_W = Theme.ROW_H, Theme.HEADER_H, Theme.NAME_W
 
@@ -90,8 +91,8 @@ local function setHover(slot, on)
   slot.right.deco.hover:SetShown(on)
 end
 
-local function rowClicked(grid, slot)
-  if slot.row and grid.onRowClick then grid.onRowClick(slot.row) end
+local function rowClicked(grid, slot, col)
+  if slot.row and grid.onRowClick then grid.onRowClick(slot.row, col) end
 end
 
 local function hoverScripts(frame, slot)
@@ -118,7 +119,7 @@ local function headerButton(grid, parent, key, text, justify, inset)
   end
   fill(b, "HIGHLIGHT", WHITE, 0.06)
   b:SetScript("OnClick", function()
-    if grid.onHeaderClick then grid.onHeaderClick(key) end
+    if grid.onHeaderClick and not grid.rowHeader then grid.onHeaderClick(key) end
   end)
   return b
 end
@@ -178,7 +179,7 @@ local function cellButton(grid, slot)
     setHover(slot, false)
     hideTooltip()
   end)
-  b:SetScript("OnClick", function() rowClicked(grid, slot) end)
+  b:SetScript("OnClick", function(self) rowClicked(grid, slot, self.col) end)
   return b
 end
 
@@ -298,6 +299,8 @@ function Grid:SetOnRowClick(fn) self.onRowClick = fn end
 function Grid:SetOnHeaderClick(fn) self.onHeaderClick = fn end
 function Grid:SetOnStarClick(fn) self.onStarClick = fn end
 function Grid:SetSelected(guid) self.selected = guid end
+-- Frozen column title for non-character rows; nil shows characters.
+function Grid:SetRowHeader(text) self.rowHeader = text end
 
 function Grid:SetSort(key, desc)
   self.sortKey, self.sortDesc = key, desc
@@ -330,8 +333,12 @@ end
 
 local function layoutHeaders(self)
   local accent = Theme.accent
+  local plain = self.rowHeader ~= nil
+  self.headers.name.label:SetText(self.rowHeader or "Character")
+  self.headers.level:SetShown(not plain)
+  self.headers.ilvl:SetShown(not plain)
   for key, b in pairs(self.headers) do
-    local active = key == self.sortKey
+    local active = key == self.sortKey and not plain
     local c = active and accent or Theme.grey
     b.label:SetTextColor(c[1], c[2], c[3])
     b.arrow:SetShown(active)
@@ -345,7 +352,8 @@ local function layoutHeaders(self)
     b:SetPoint("TOPLEFT", self.colX[j], 0)
     b:SetSize(col.width or DEFAULT_COL_W, HEADER_H)
     b.label:SetText(col.label or "")
-    b.label:SetTextColor(TEXT[1], TEXT[2], TEXT[3])
+    local c = col.color or TEXT
+    b.label:SetTextColor(c[1], c[2], c[3])
     b:Show()
   end
   for j = #self.columns + 1, #self.dataHeaders do self.dataHeaders[j]:Hide() end
@@ -385,19 +393,28 @@ local function fillSlot(self, slot, row, index)
   local empty = ns.Rows.EMPTY
   local meta = row.char and row.char.meta or {}
   local even = index % 2 == 0
-  local selected = row.guid == self.selected
+  local selected = row.guid ~= nil and row.guid == self.selected
   for _, part in ipairs({ slot.left, slot.right }) do
     part.deco.zebra:SetShown(even)
     part.deco.selected:SetShown(selected)
   end
 
-  slot.star.icon:SetDesaturated(not row.favorite)
-  slot.star.icon:SetAlpha(row.favorite and 1 or 0.25)
+  local isChar = self.rowHeader == nil
+  slot.star:SetShown(isChar)
+  slot.level:SetShown(isChar)
+  slot.ilvl:SetShown(isChar)
+  slot.name:SetPoint("RIGHT", isChar and -(LEVEL_W + ILVL_W) or -6, 0)
   slot.name:SetText(row.label ~= "" and row.label or "?")
-  slot.name:SetTextColor(Theme.ClassColor(meta.classFile))
-  slot.level:SetText(meta.level and tostring(meta.level) or empty)
-  slot.level:SetTextColor(unpack(Theme.grey))
-  slot.ilvl:SetText(meta.ilvl and tostring(math.floor(meta.ilvl)) or empty)
+  if isChar then
+    slot.star.icon:SetDesaturated(not row.favorite)
+    slot.star.icon:SetAlpha(row.favorite and 1 or 0.25)
+    slot.name:SetTextColor(Theme.ClassColor(meta.classFile))
+    slot.level:SetText(meta.level and tostring(meta.level) or empty)
+    slot.level:SetTextColor(unpack(Theme.grey))
+    slot.ilvl:SetText(meta.ilvl and tostring(math.floor(meta.ilvl)) or empty)
+  else
+    slot.name:SetTextColor(TEXT[1], TEXT[2], TEXT[3])
+  end
 
   for j, col in ipairs(self.columns) do
     local b = slot.cells[j] or cellButton(self, slot)
@@ -407,7 +424,7 @@ local function fillSlot(self, slot, row, index)
     local c = cell.color or (text == empty and Theme.grey) or TEXT
     b.text:SetText(text)
     b.text:SetTextColor(c[1], c[2], c[3])
-    b.tooltip, b.title = cell.tooltip, col.label
+    b.tooltip, b.title, b.col = cell.tooltip, cell.title or col.label, col
     b:ClearAllPoints()
     b:SetPoint("TOPLEFT", self.colX[j], 0)
     b:SetSize(col.width or DEFAULT_COL_W, ROW_H)
