@@ -40,8 +40,7 @@ below needs the real client (Retail 12.0.x). Enable errors first:
 - [ ] During a holiday event, its boss appears under a "Holiday" heading at the top of the Legacy tab.
 - [ ] After the day's first kill, that character gets a check without a `/reload`, and the check clears at the daily reset.
 - [ ] Outside events, there is no Holiday section.
-- [ ] `/dump select(15, GetLFGDungeonInfo(<id>))` returns true for the holiday dungeon. Take the ID from `/dump GetLFGRandomDungeonInfo(i)`. This confirms the holiday flag's return position on 12.0.7.
-- [ ] `/dump select(18, GetLFGDungeonInfo(<id>))` returns true for a Random Timewalking Dungeon, and no Holiday section appears during a Timewalking week with no holiday event. This confirms the Timewalking flag's return position on 12.0.7.
+- [ ] No Random Timewalking Dungeon ever appears under "Holiday", including the one live this week. During a Timewalking week with no holiday event, there is no Holiday section.
 - [ ] At the minimum window width, the five tab buttons don't overlap the "Current realm" toggle.
 - [ ] Extended lockout: with reset = 0 the cell still displays sensibly (no "resets in 0s" or error).
 

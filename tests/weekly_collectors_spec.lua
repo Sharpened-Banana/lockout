@@ -244,17 +244,21 @@ describe("Delves collector", function()
 end)
 
 describe("Holidays collector", function()
-  local dungeons, infos, rewards, requested
+  local dungeons, infos, rewards, joinable, requested
 
   local function stubs()
-    dungeons, infos, rewards, requested = {}, {}, {}, 0
+    dungeons, infos, rewards, joinable, requested = {}, {}, {}, {}, 0
     GetNumRandomDungeons = function() return #dungeons end
     GetLFGRandomDungeonInfo = function(i) local d = dungeons[i]; return d.id, d.name end
-    -- isHoliday is the 15th return, isTimeWalker the 18th
+    -- typeID is the 2nd return, isHoliday the 15th
     GetLFGDungeonInfo = function(id)
       local h = infos[id]
       if not h then return nil end
-      return h.name, 1, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 5, "", h.holiday, 0, 0, h.timewalker
+      return h.name, h.typeID or 1, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 5, "", h.holiday
+    end
+    IsLFGDungeonJoinable = function(id)
+      local j = joinable[id] or { true, true, false }
+      return j[1], j[2], j[3]
     end
     GetLFGDungeonRewards = function(id) return rewards[id] == true end
     RequestLFDPlayerLockInfo = function() requested = requested + 1 end
@@ -273,7 +277,7 @@ describe("Holidays collector", function()
     local _, def = setup()
     assert.same({ "LFG_UPDATE_RANDOM_INFO", "LFG_COMPLETION_REWARD" }, def.events)
     assert.same({
-      "GetNumRandomDungeons", "GetLFGRandomDungeonInfo", "GetLFGDungeonInfo",
+      "GetNumRandomDungeons", "GetLFGRandomDungeonInfo", "GetLFGDungeonInfo", "IsLFGDungeonJoinable",
       "GetLFGDungeonRewards", "RequestLFDPlayerLockInfo", "C_DateAndTime.GetSecondsUntilDailyReset",
     }, def.requires)
     assert.is_nil(def.disabled)
@@ -304,14 +308,45 @@ describe("Holidays collector", function()
     }, rec.holidays)
   end)
 
-  it("a Timewalking dungeon is skipped even though it carries the holiday flag", function()
+  -- Values from the 12.0.7 client during Hallow's End in a Warlords Timewalking week: every
+  -- Timewalking random has the holiday flag and false in the 18th return.
+  it("keeps only the holiday boss, not live or hidden Timewalking", function()
     local _, def, rec = setup()
-    dungeons = { { id = 285, name = "Headless Horseman" }, { id = 300, name = "Random Timewalking Dungeon" } }
-    infos[285] = { holiday = true }
-    infos[300] = { holiday = true, timewalker = true }
+    dungeons = {
+      { id = 285, name = "The Headless Horseman" },
+      { id = 1971, name = "Random Timewalking Dungeon (Warlords of Draenor)" },
+      { id = 744, name = "Random Timewalking Dungeon (Burning Crusade)" },
+      { id = 2746, name = "Random Dungeon (Midnight)" },
+    }
+    infos[285] = { holiday = true, typeID = 1 }
+    infos[1971] = { holiday = true, typeID = 6 }
+    infos[744] = { holiday = true, typeID = 6 }
+    infos[2746] = { holiday = false, typeID = 6 }
+    joinable[744] = { false, false, true }
+    rewards[744] = true -- the game also reports done for hidden entries
     def:Collect(rec, mock.now)
-    assert.same({ [285] = { name = "Headless Horseman", resetAt = mock.now + 3600 } }, rec.holidays.active)
-    assert.same({}, rec.holidays.done)
+    assert.same({
+      active = { [285] = { name = "The Headless Horseman", resetAt = mock.now + 3600 } },
+      done = {},
+    }, rec.holidays)
+  end)
+
+  it("a holiday boss hidden from the dungeon finder is not live", function()
+    local _, def, rec = setup()
+    dungeons = { { id = 287, name = "Coren Direbrew" } }
+    infos[287] = { holiday = true, typeID = 1 }
+    joinable[287] = { false, false, true }
+    def:Collect(rec, mock.now)
+    assert.same({ active = {}, done = {} }, rec.holidays)
+  end)
+
+  it("a holiday boss this character can't queue for yet is still live", function()
+    local _, def, rec = setup()
+    dungeons = { { id = 285, name = "The Headless Horseman" } }
+    infos[285] = { holiday = true, typeID = 1 }
+    joinable[285] = { false, false, false } -- shown greyed out, as for a low-level character
+    def:Collect(rec, mock.now)
+    assert.equals("The Headless Horseman", rec.holidays.active[285].name)
   end)
 
   it("falls back to the dungeon info name", function()

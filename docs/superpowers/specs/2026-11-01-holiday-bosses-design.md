@@ -11,8 +11,8 @@ Farming holiday-boss mounts and loot across a warband. The question it answers i
 - **Off-season:** a holiday boss shows only while its event is live. With no live event, there is no Holiday section.
 - **Coverage:** whatever the game lists. While an event runs, the dungeon finder lists its holiday dungeon. Lockout reads that list, so it covers future holiday bosses with no IDs to maintain. Names come from the game, already localized.
 - **Detection:** the dungeon finder, not hidden quests or the calendar.
-  - The random-dungeon list gives what's live.
-  - The holiday flag on each listed dungeon picks out holiday bosses.
+  - The random-dungeon list, filtered by what the dungeon finder would offer, gives what's live.
+  - The holiday flag, minus random-queue entries such as Timewalking, picks out holiday bosses.
   - Each dungeon's reward state gives "already looted today".
 - **Reset:** daily (`C_DateAndTime.GetSecondsUntilDailyReset`). A kill expires at the daily reset, even for characters who are offline.
 
@@ -24,7 +24,7 @@ New file `Collectors/Holidays.lua`, registered with the collector bus:
 ns.RegisterCollector({
   name = "Holidays",
   events = { "LFG_UPDATE_RANDOM_INFO", "LFG_COMPLETION_REWARD" },
-  requires = { "GetNumRandomDungeons", "GetLFGRandomDungeonInfo", "GetLFGDungeonInfo",
+  requires = { "GetNumRandomDungeons", "GetLFGRandomDungeonInfo", "GetLFGDungeonInfo", "IsLFGDungeonJoinable",
                "GetLFGDungeonRewards", "RequestLFDPlayerLockInfo", "C_DateAndTime.GetSecondsUntilDailyReset" },
   OnLogin = function() RequestLFDPlayerLockInfo() end,
   -- A reward just landed; ask again so the next LFG_UPDATE_RANDOM_INFO carries doneToday.
@@ -43,7 +43,10 @@ record.holidays = {
 ```
 
 - **Walking the list:** `i = 1 .. GetNumRandomDungeons()`. `local dungeonID, name = GetLFGRandomDungeonInfo(i)`.
-- **Holiday check:** a dungeon is a holiday when the 15th return of `GetLFGDungeonInfo(dungeonID)` (`isHoliday`) is truthy and the 18th return (`isTimeWalker`) is not. Others are skipped. Random Timewalking runs as a calendar event and can carry the holiday flag, so the second check keeps it out.
+- **Holiday check:** a dungeon is a live holiday boss when all of these hold, and is skipped otherwise:
+  - The 15th return of `GetLFGDungeonInfo(dungeonID)` (`isHoliday`) is truthy.
+  - The 2nd return (`typeID`) is not 6, the random-queue type. Every Random Timewalking Dungeon carries the holiday flag, and the 18th return (`isTimeWalker`) is false for all of them on 12.0.7 (checked in the client during Hallow's End in a Warlords Timewalking week: the Horseman is type 1, Timewalking is type 6).
+  - The dungeon finder would show it: `isAvailableForPlayer or not hideIfNotJoinable`, from `IsLFGDungeonJoinable(dungeonID)`. The random-dungeon list also holds inactive entries, which are marked hidden. This is the dungeon finder dropdown's own rule (`LFDFrame.lua`).
 - **Done check:** `doneToday` is the first return of `GetLFGDungeonRewards(dungeonID)`.
 - **Name:** the name from `GetLFGRandomDungeonInfo`, falling back to the first return of `GetLFGDungeonInfo`.
 - **Unknown reset:** if `GetSecondsUntilDailyReset()` returns nil, `resetAt` is nil (`Reset.Absolute`). The UI must not do arithmetic on a nil `resetAt` (see Legacy tab).
@@ -89,7 +92,7 @@ Write each test first and watch it fail.
   - During an event, the holiday boss appears under "Holiday".
   - After the first kill of the day, that character gets a check without a `/reload`, and the check clears at the daily reset.
   - Outside events, there is no Holiday section.
-  - `/dump select(15, GetLFGDungeonInfo(<id>))` is true for the holiday dungeon. It confirms the holiday flag's return position on 12.0.7.
+  - During a Timewalking week with no holiday event, there is no Holiday section.
 
 ## Out of scope
 

@@ -59,6 +59,7 @@ local function install()
   GetNumRandomDungeons = function() return 0 end
   GetLFGRandomDungeonInfo = function() end
   GetLFGDungeonInfo = function() end
+  IsLFGDungeonJoinable = function() return true, true, false end
   GetLFGDungeonRewards = function() return false end
   RequestLFDPlayerLockInfo = function() end
   -- Vault / M+ / delves / bags

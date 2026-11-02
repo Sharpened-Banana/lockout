@@ -2,14 +2,25 @@ local _, ns = ...
 
 local Reset = ns.Reset
 
--- Dungeon-finder holiday bosses (Headless Horseman, Coren Direbrew, ...). The game lists a
--- holiday dungeon only while its event is live, so no IDs are kept here. Rewards are the
--- first kill of each day, which resets with the daily reset.
+-- Dungeon-finder holiday bosses (Headless Horseman, Coren Direbrew, ...). No IDs are kept here:
+-- what the dungeon finder offers decides what's live. Rewards are the first kill of each day,
+-- which resets with the daily reset.
+
+-- GetLFGDungeonInfo typeID of a random-queue entry. Every Random Timewalking Dungeon carries the
+-- holiday flag too, and the 18th return (isTimeWalker) is false for them on 12.0.7.
+local TYPEID_RANDOM = 6
+
+-- The dungeon finder's own rule for showing an entry: inactive events are hidden.
+local function isOffered(dungeonID)
+  local _, availableForPlayer, hideIfNotJoinable = IsLFGDungeonJoinable(dungeonID)
+  return availableForPlayer or not hideIfNotJoinable
+end
+
 ns.RegisterCollector({
   name = "Holidays",
   events = { "LFG_UPDATE_RANDOM_INFO", "LFG_COMPLETION_REWARD" },
   requires = {
-    "GetNumRandomDungeons", "GetLFGRandomDungeonInfo", "GetLFGDungeonInfo",
+    "GetNumRandomDungeons", "GetLFGRandomDungeonInfo", "GetLFGDungeonInfo", "IsLFGDungeonJoinable",
     "GetLFGDungeonRewards", "RequestLFDPlayerLockInfo", "C_DateAndTime.GetSecondsUntilDailyReset",
   },
 
@@ -30,9 +41,8 @@ ns.RegisterCollector({
       local infoName, isHoliday = nil, nil
       if dungeonID then
         local info = { GetLFGDungeonInfo(dungeonID) }
-        -- Random Timewalking also carries the holiday flag (it runs as a calendar event);
-        -- isTimeWalker, the 18th return, tells it apart.
-        infoName, isHoliday = info[1], info[15] and not info[18]
+        infoName = info[1]
+        isHoliday = info[15] and info[2] ~= TYPEID_RANDOM and isOffered(dungeonID)
       end
       if isHoliday then
         local name = listName or infoName

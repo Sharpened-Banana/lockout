@@ -25,7 +25,7 @@ read_globals = {
   -- Vault / MythicPlus / Delves
   "C_WeeklyRewards", "C_MythicPlus", "C_PlayerInfo", "C_CurrencyInfo",
   -- Holidays
-  "GetNumRandomDungeons", "GetLFGRandomDungeonInfo", "GetLFGDungeonInfo", "GetLFGDungeonRewards",
+  "GetNumRandomDungeons", "GetLFGRandomDungeonInfo", "GetLFGDungeonInfo", "IsLFGDungeonJoinable", "GetLFGDungeonRewards",
   "RequestLFDPlayerLockInfo",
   -- Bags
   "C_Container",
