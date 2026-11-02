@@ -52,7 +52,7 @@ function DB:Init(saved)
   return db
 end
 
-local SECTIONS = { "meta", "instances", "worldBosses", "vault", "mythicPlus", "delves", "equipment", "bags", "watchlist", "legacyBosses" }
+local SECTIONS = { "meta", "instances", "worldBosses", "vault", "mythicPlus", "delves", "equipment", "bags", "watchlist", "legacyBosses", "holidays" }
 
 function DB.Current()
   local guid = UnitGUID("player")
@@ -68,6 +68,8 @@ function DB.Current()
   rec.bags.counts = rec.bags.counts or {}
   rec.delves.currencies = rec.delves.currencies or {}
   rec.vault.activities = rec.vault.activities or {}
+  rec.holidays.active = rec.holidays.active or {}
+  rec.holidays.done = rec.holidays.done or {}
   return rec
 end
 

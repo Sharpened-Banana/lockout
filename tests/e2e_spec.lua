@@ -51,7 +51,16 @@ local function install()
   RequestRaidInfo = function() end
   GetNumSavedWorldBosses = function() return 0 end
   C_QuestLog = { IsQuestFlaggedCompleted = function() return false end }
-  C_DateAndTime = { GetSecondsUntilWeeklyReset = function() return 86400 end }
+  C_DateAndTime = {
+    GetSecondsUntilWeeklyReset = function() return 86400 end,
+    GetSecondsUntilDailyReset = function() return 3600 end,
+  }
+  -- Dungeon finder (Holidays)
+  GetNumRandomDungeons = function() return 0 end
+  GetLFGRandomDungeonInfo = function() end
+  GetLFGDungeonInfo = function() end
+  GetLFGDungeonRewards = function() return false end
+  RequestLFDPlayerLockInfo = function() end
   -- Vault / M+ / delves / bags
   C_WeeklyRewards = {
     GetActivities = function()
@@ -130,6 +139,7 @@ describe("end to end", function()
       assert.equals(645, current.equipment[1].ilvl)
       assert.truthy(current.instances["2100:15"])
       assert.same({}, current.legacyBosses)
+      assert.same({ active = {}, done = {} }, current.holidays)
 
       SlashCmdList.LOCKOUT("")
       assert.is_true(LockoutMainFrame:IsShown())

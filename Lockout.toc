@@ -27,6 +27,7 @@ Collectors\Vault.lua
 Collectors\MythicPlus.lua
 Collectors\Delves.lua
 Collectors\Bags.lua
+Collectors\Holidays.lua
 
 UI\Theme.lua
 UI\Rows.lua

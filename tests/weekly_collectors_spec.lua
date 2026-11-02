@@ -242,3 +242,100 @@ describe("Delves collector", function()
     assert.equals(mock.now, rec.delves.updatedAt)
   end)
 end)
+
+describe("Holidays collector", function()
+  local dungeons, infos, rewards, requested
+
+  local function stubs()
+    dungeons, infos, rewards, requested = {}, {}, {}, 0
+    GetNumRandomDungeons = function() return #dungeons end
+    GetLFGRandomDungeonInfo = function(i) local d = dungeons[i]; return d.id, d.name end
+    -- isHoliday is the 15th return
+    GetLFGDungeonInfo = function(id)
+      local h = infos[id]
+      if not h then return nil end
+      return h.name, 1, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 5, "", h.holiday
+    end
+    GetLFGDungeonRewards = function(id) return rewards[id] == true end
+    RequestLFDPlayerLockInfo = function() requested = requested + 1 end
+    C_DateAndTime = { GetSecondsUntilDailyReset = function() return 3600 end }
+  end
+
+  local function setup(install)
+    local ns = loadAddon({ "Collectors/Holidays.lua" }, function()
+      stubs()
+      if install then install() end
+    end)
+    return ns, ns.collectors.Holidays, ns.DB:Current()
+  end
+
+  it("is registered with its events and requirements", function()
+    local _, def = setup()
+    assert.same({ "LFG_UPDATE_RANDOM_INFO", "LFG_COMPLETION_REWARD" }, def.events)
+    assert.is_nil(def.disabled)
+  end)
+
+  it("requests dungeon info on login and after a reward", function()
+    local _, def = setup()
+    def.OnLogin()
+    assert.equals(1, requested)
+    def.OnEvent("LFG_COMPLETION_REWARD")
+    assert.equals(2, requested)
+    def.OnEvent("LFG_UPDATE_RANDOM_INFO")
+    assert.equals(2, requested)
+  end)
+
+  it("holiday dungeons are active, done when rewarded, others skipped", function()
+    local _, def, rec = setup()
+    dungeons = { { id = 285, name = "Headless Horseman" }, { id = 286, name = "Ahune" }, { id = 9, name = "Random Dungeon" } }
+    infos[285], infos[286], infos[9] = { holiday = true }, { holiday = true }, { holiday = false }
+    rewards[285] = true
+    def:Collect(rec, mock.now)
+    assert.same({
+      active = {
+        [285] = { name = "Headless Horseman", resetAt = mock.now + 3600 },
+        [286] = { name = "Ahune", resetAt = mock.now + 3600 },
+      },
+      done = { [285] = { name = "Headless Horseman", resetAt = mock.now + 3600 } },
+    }, rec.holidays)
+  end)
+
+  it("falls back to the dungeon info name", function()
+    local _, def, rec = setup()
+    dungeons = { { id = 287 } }
+    infos[287] = { name = "Coren Direbrew", holiday = true }
+    def:Collect(rec, mock.now)
+    assert.equals("Coren Direbrew", rec.holidays.active[287].name)
+  end)
+
+  it("empty list writes empty tables and drops stale entries", function()
+    local _, def, rec = setup()
+    rec.holidays = { active = { [1] = { name = "Old" } }, done = {} }
+    def:Collect(rec, mock.now)
+    assert.same({ active = {}, done = {} }, rec.holidays)
+  end)
+
+  it("a dungeon without info is skipped", function()
+    local _, def, rec = setup()
+    dungeons = { { id = 400, name = "Loading" }, { id = 285, name = "Headless Horseman" } }
+    infos[285] = { holiday = true }
+    def:Collect(rec, mock.now)
+    assert.same({ [285] = { name = "Headless Horseman", resetAt = mock.now + 3600 } }, rec.holidays.active)
+  end)
+
+  it("unknown daily reset leaves resetAt nil", function()
+    local _, def, rec = setup(function()
+      C_DateAndTime.GetSecondsUntilDailyReset = function() return nil end
+    end)
+    dungeons = { { id = 285, name = "Headless Horseman" } }
+    infos[285] = { holiday = true }
+    def:Collect(rec, mock.now)
+    assert.is_nil(rec.holidays.active[285].resetAt)
+    assert.equals("Headless Horseman", rec.holidays.active[285].name)
+  end)
+
+  it("disables itself without the rewards API", function()
+    local _, def = setup(function() GetLFGDungeonRewards = nil end)
+    assert.is_true(def.disabled)
+  end)
+end)

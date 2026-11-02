@@ -28,7 +28,7 @@ loader.ALL = existing({
   "Data/Consumables.lua", "Data/Content.lua", "Core/Season.lua",
   "Collectors/Character.lua", "Collectors/Equipment.lua", "Collectors/Instances.lua",
   "Collectors/WorldBosses.lua", "Collectors/Vault.lua", "Collectors/MythicPlus.lua",
-  "Collectors/Delves.lua", "Collectors/Bags.lua",
+  "Collectors/Delves.lua", "Collectors/Bags.lua", "Collectors/Holidays.lua",
   "UI/Theme.lua", "UI/Rows.lua",
   "UI/Tabs/Raids.lua", "UI/Tabs/Dungeons.lua", "UI/Tabs/WorldBosses.lua", "UI/Tabs/Weekly.lua", "UI/Tabs/Legacy.lua",
   "UI/Grid.lua", "UI/DetailPanel.lua", "UI/MainFrame.lua", "UI/Minimap.lua", "UI/Settings.lua",

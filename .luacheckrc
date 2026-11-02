@@ -24,6 +24,9 @@ read_globals = {
   "GetNumSavedWorldBosses", "GetSavedWorldBossInfo", "C_QuestLog", "C_DateAndTime",
   -- Vault / MythicPlus / Delves
   "C_WeeklyRewards", "C_MythicPlus", "C_PlayerInfo", "C_CurrencyInfo",
+  -- Holidays
+  "GetNumRandomDungeons", "GetLFGRandomDungeonInfo", "GetLFGDungeonInfo", "GetLFGDungeonRewards",
+  "RequestLFDPlayerLockInfo",
   -- Bags
   "C_Container",
   -- UI
