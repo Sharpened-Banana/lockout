@@ -291,13 +291,18 @@ describe("Tab models", function()
 
     it("rows are the active non-season raids of the listed characters, by name", function()
       local rows = ns.Tabs.Legacy.Rows(ctx)
-      assert.same({ { key = 400, label = "Old Sanctum" }, { key = 300, label = "Zeta Ruins" } }, rows)
+      assert.same({
+        { heading = true, key = "h:raids", label = "Raids" },
+        { kind = "raid", key = 400, label = "Old Sanctum" }, { kind = "raid", key = 300, label = "Zeta Ruins" },
+      }, rows)
     end)
 
     it("characters outside the list do not add rows", function()
       ctx.characters = { ctx.characters[2] }
       ctx.db.characters["g1"] = { instances = { ["400:14"] = inst(400, 14, "Normal", 1, 5, NOW + 100, "Old Sanctum") } }
-      assert.same({ { key = 300, label = "Zeta Ruins" } }, ns.Tabs.Legacy.Rows(ctx))
+      assert.same({
+        { heading = true, key = "h:raids", label = "Raids" }, { kind = "raid", key = 300, label = "Zeta Ruins" },
+      }, ns.Tabs.Legacy.Rows(ctx))
     end)
 
     it("columns are the listed characters, in order, class colored", function()
@@ -314,7 +319,7 @@ describe("Tab models", function()
 
     it("cells read like the raid tab, titled by the raid", function()
       local cols = ns.Tabs.Legacy.Columns(ctx)
-      local zeta = { key = 300, label = "Zeta Ruins" }
+      local zeta = { kind = "raid", key = 300, label = "Zeta Ruins" }
       local cell = ns.Tabs.Legacy.Cell(zeta, cols[1], ctx)
       assert.equals("N 2/5", cell.text)
       assert.same(ns.Rows.COLORS.yellow, cell.color)
@@ -328,10 +333,59 @@ describe("Tab models", function()
 
     it("empty without characters or a season", function()
       ctx.season = nil
-      assert.equals(3, #ns.Tabs.Legacy.Rows(ctx))
+      assert.equals(4, #ns.Tabs.Legacy.Rows(ctx))
       ctx.characters = nil
       assert.same({}, ns.Tabs.Legacy.Rows(ctx))
       assert.same({}, ns.Tabs.Legacy.Columns(ctx))
+    end)
+
+    describe("world bosses", function()
+      before_each(function()
+        ns.Content.LEGACY_WORLD_BOSSES = {
+          { key = "q333", questID = 333, name = "Galleon Test", drop = "Son of Galleon" },
+          { key = "q444", questID = 444, name = "No Drop Boss" },
+        }
+        ctx.characters[1].char.legacyBosses = {
+          q333 = { name = "Galleon Test", resetAt = NOW + 3600 },
+          q444 = { name = "No Drop Boss", resetAt = NOW - 1 },
+        }
+      end)
+
+      it("boss rows always follow a World bosses heading, in data order", function()
+        local rows = ns.Tabs.Legacy.Rows(ctx)
+        local n = #rows
+        assert.same({ heading = true, key = "h:bosses", label = "World bosses" }, rows[n - 2])
+        assert.equals("q333", rows[n - 1].key)
+        assert.equals("boss", rows[n - 1].kind)
+        assert.equals("No Drop Boss", rows[n].label)
+        ctx.characters = {}
+        local keys = {}
+        for i, r in ipairs(ns.Tabs.Legacy.Rows(ctx)) do keys[i] = r.key end
+        assert.same({ "h:bosses", "q333", "q444" }, keys)
+      end)
+
+      it("boss cells: check with drop and reset when killed, dash otherwise", function()
+        local cols = ns.Tabs.Legacy.Columns(ctx)
+        local rows = ns.Tabs.Legacy.Rows(ctx)
+        local galleon, nodrop = rows[#rows - 1], rows[#rows]
+        local cell = ns.Tabs.Legacy.Cell(galleon, cols[1], ctx)
+        assert.equals(ns.Theme.Icon.check, cell.text)
+        assert.same(ns.Rows.COLORS.green, cell.color)
+        assert.equals("Galleon Test", cell.title)
+        assert.same({ { left = "Son of Galleon" }, { left = "Galleon Test", right = "resets in 1h 0m" } }, cell.tooltip)
+        local open = ns.Tabs.Legacy.Cell(galleon, cols[2], ctx)       -- Jaina: no kill
+        assert.equals("–", open.text)
+        assert.same({ { left = "Son of Galleon" } }, open.tooltip)
+        local expired = ns.Tabs.Legacy.Cell(nodrop, cols[1], ctx)     -- expired kill, no drop
+        assert.equals("–", expired.text)
+        assert.is_nil(expired.tooltip)
+        assert.equals("–", ns.Tabs.Legacy.Cell(galleon, cols[3], ctx).text) -- Fresh: no legacyBosses section
+      end)
+    end)
+
+    it("heading cells are blank", function()
+      local cols = ns.Tabs.Legacy.Columns(ctx)
+      assert.same({ text = "" }, ns.Tabs.Legacy.Cell({ heading = true, key = "h:bosses", label = "World bosses" }, cols[1], ctx))
     end)
   end)
 

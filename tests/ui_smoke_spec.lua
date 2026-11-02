@@ -118,11 +118,12 @@ describe("UI smoke", function()
     assert.equals(ns.UI.frame, LockoutMainFrame)
     assert.is_true(LockoutMainFrame:IsShown())
 
+    ns.Content.LEGACY_WORLD_BOSSES = {}
     for _, name in ipairs(ns.TabOrder) do
       ns.UI:SelectTab(name)
       assert.equals(name, ns.UI.selectedTab)
       ns.UI:Refresh()
-      assert.equals(name == "Legacy" and 1 or 28, #grid.rows)
+      assert.equals(name == "Legacy" and 2 or 28, #grid.rows)
     end
     -- default sort: ilvl descending
     ns.UI:SelectTab("Raids")
@@ -150,15 +151,16 @@ describe("UI smoke", function()
   end)
 
   it("legacy tab lists raids down the side and characters across", function()
+    ns.Content.LEGACY_WORLD_BOSSES = {}
     local grid = open()
     ns.UI:SelectTab("Legacy")
-    assert.same({ "Alpha Keep" }, labels(grid.rows))
+    assert.same({ "Raids", "Alpha Keep" }, labels(grid.rows))
     assert.equals(28, #grid.columns)
     assert.equals("Thrall", grid.dataHeaders[1].label:GetText())
     assert.same({ 0, 0.44, 0.87 }, { grid.dataHeaders[1].label:GetTextColor() })
     assert.equals("Jaina", grid.dataHeaders[2].label:GetText())
 
-    local slot = grid.slots[1]
+    local slot = grid.slots[2]
     assert.equals("Alpha Keep", slot.name:GetText())
     assert.same({ 0.9, 0.9, 0.9 }, { slot.name:GetTextColor() })
     assert.is_false(slot.star:IsShown())
@@ -400,9 +402,10 @@ describe("UI smoke", function()
   end)
 
   it("cell hover shows the cell tooltip", function()
+    ns.Content.LEGACY_WORLD_BOSSES = {}
     local grid = open()
     ns.UI:SelectTab("Legacy")
-    local cell = grid.slots[1].cells[1]
+    local cell = grid.slots[2].cells[1]
     cell:GetScript("OnEnter")(cell)
     assert.equals("Alpha Keep", tooltipLines[1])
     assert.equals("Heroic | resets in 1d 0h", tooltipLines[2])
