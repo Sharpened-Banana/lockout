@@ -30,7 +30,9 @@ ns.RegisterCollector({
       local infoName, isHoliday = nil, nil
       if dungeonID then
         local info = { GetLFGDungeonInfo(dungeonID) }
-        infoName, isHoliday = info[1], info[15]
+        -- Random Timewalking also carries the holiday flag (it runs as a calendar event);
+        -- isTimeWalker, the 18th return, tells it apart.
+        infoName, isHoliday = info[1], info[15] and not info[18]
       end
       if isHoliday then
         local name = listName or infoName

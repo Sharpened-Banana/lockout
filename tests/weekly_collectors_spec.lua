@@ -250,11 +250,11 @@ describe("Holidays collector", function()
     dungeons, infos, rewards, requested = {}, {}, {}, 0
     GetNumRandomDungeons = function() return #dungeons end
     GetLFGRandomDungeonInfo = function(i) local d = dungeons[i]; return d.id, d.name end
-    -- isHoliday is the 15th return
+    -- isHoliday is the 15th return, isTimeWalker the 18th
     GetLFGDungeonInfo = function(id)
       local h = infos[id]
       if not h then return nil end
-      return h.name, 1, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 5, "", h.holiday
+      return h.name, 1, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 5, "", h.holiday, 0, 0, h.timewalker
     end
     GetLFGDungeonRewards = function(id) return rewards[id] == true end
     RequestLFDPlayerLockInfo = function() requested = requested + 1 end
@@ -272,6 +272,10 @@ describe("Holidays collector", function()
   it("is registered with its events and requirements", function()
     local _, def = setup()
     assert.same({ "LFG_UPDATE_RANDOM_INFO", "LFG_COMPLETION_REWARD" }, def.events)
+    assert.same({
+      "GetNumRandomDungeons", "GetLFGRandomDungeonInfo", "GetLFGDungeonInfo",
+      "GetLFGDungeonRewards", "RequestLFDPlayerLockInfo", "C_DateAndTime.GetSecondsUntilDailyReset",
+    }, def.requires)
     assert.is_nil(def.disabled)
   end)
 
@@ -298,6 +302,16 @@ describe("Holidays collector", function()
       },
       done = { [285] = { name = "Headless Horseman", resetAt = mock.now + 3600 } },
     }, rec.holidays)
+  end)
+
+  it("a Timewalking dungeon is skipped even though it carries the holiday flag", function()
+    local _, def, rec = setup()
+    dungeons = { { id = 285, name = "Headless Horseman" }, { id = 300, name = "Random Timewalking Dungeon" } }
+    infos[285] = { holiday = true }
+    infos[300] = { holiday = true, timewalker = true }
+    def:Collect(rec, mock.now)
+    assert.same({ [285] = { name = "Headless Horseman", resetAt = mock.now + 3600 } }, rec.holidays.active)
+    assert.same({}, rec.holidays.done)
   end)
 
   it("falls back to the dungeon info name", function()

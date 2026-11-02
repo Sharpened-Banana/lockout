@@ -43,7 +43,7 @@ record.holidays = {
 ```
 
 - **Walking the list:** `i = 1 .. GetNumRandomDungeons()`. `local dungeonID, name = GetLFGRandomDungeonInfo(i)`.
-- **Holiday check:** a dungeon is a holiday when `select(15, GetLFGDungeonInfo(dungeonID))` (`isHoliday`) is truthy. Others are skipped.
+- **Holiday check:** a dungeon is a holiday when the 15th return of `GetLFGDungeonInfo(dungeonID)` (`isHoliday`) is truthy and the 18th return (`isTimeWalker`) is not. Others are skipped. Random Timewalking runs as a calendar event and can carry the holiday flag, so the second check keeps it out.
 - **Done check:** `doneToday` is the first return of `GetLFGDungeonRewards(dungeonID)`.
 - **Name:** the name from `GetLFGRandomDungeonInfo`, falling back to the first return of `GetLFGDungeonInfo`.
 - **Unknown reset:** if `GetSecondsUntilDailyReset()` returns nil, `resetAt` is nil (`Reset.Absolute`). The UI must not do arithmetic on a nil `resetAt` (see Legacy tab).
