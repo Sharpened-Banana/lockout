@@ -1,0 +1,70 @@
+name: Release
+
+# Pushing a tag like v0.2.0 builds the zip and uploads it to CurseForge and
+# GitHub Releases. Running it by hand from the Actions tab does a dry run:
+# it builds the zip and attaches it to the run, but uploads nothing.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write # create the GitHub release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq luajit
+          luajit tests/run.lua
+
+      - name: Check version, tag and changelog agree
+        id: version
+        run: |
+          version=$(sed -n 's/^## Version: *//p' Lockout.toc | tr -d '\r')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match ## Version: $version in Lockout.toc"
+            exit 1
+          fi
+          if ! grep -q "^## $version " CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## $version' section"
+            exit 1
+          fi
+
+      - name: Write release notes from CHANGELOG.md
+        run: |
+          awk -v v="${{ steps.version.outputs.version }}" '
+            $0 ~ "^## " v " " { on = 1; next }
+            /^## / { on = 0 }
+            on' CHANGELOG.md | awk 'NF { p = 1 } p' > .release-notes.md
+          cat .release-notes.md
+
+      - name: Package and upload
+        if: github.ref_type == 'tag'
+        uses: BigWigsMods/packager@v2
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }} # the name packager@v2 reads
+
+      - name: Package only (dry run)
+        if: github.ref_type != 'tag'
+        uses: BigWigsMods/packager@v2
+        with:
+          args: -d
+
+      - name: Attach the zip to this run
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lockout-${{ steps.version.outputs.version }}
+          path: .release/*.zip
+          if-no-files-found: error
+          include-hidden-files: true # .release/ starts with a dot
