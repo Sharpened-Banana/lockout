@@ -437,6 +437,22 @@ describe("UI smoke", function()
     assert.equals(100, grid.hoffset)
   end)
 
+  it("live holiday boss sits above the raids and opens its character", function()
+    local grid = open()
+    ns.Content.LEGACY_WORLD_BOSSES = {}
+    local jaina = ns.db.characters["Player-2-0002"]
+    jaina.holidays = { active = { [285] = { name = "Headless Horseman", resetAt = mock.now + 3600 } },
+                       done = { [285] = { name = "Headless Horseman", resetAt = mock.now + 3600 } } }
+    ns.UI:SelectTab("Legacy")
+    assert.same({ "Holiday", "Headless Horseman", "Raids", "Alpha Keep" }, labels(grid.rows))
+    assert.equals(ns.Theme.Icon.check, grid.slots[2].cells[2].text:GetText()) -- Jaina
+    assert.equals("–", grid.slots[2].cells[1].text:GetText())                 -- Thrall
+    click(grid.slots[1].cells[2])
+    assert.same({}, detail)
+    click(grid.slots[2].cells[2])
+    assert.same({ "Player-2-0002" }, detail)
+  end)
+
   it("cell hover shows the cell tooltip", function()
     ns.Content.LEGACY_WORLD_BOSSES = {}
     local grid = open()

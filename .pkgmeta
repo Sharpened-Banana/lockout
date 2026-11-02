@@ -12,3 +12,9 @@ ignore:
   - .luacheckrc
   - Media/Icon.svg
   - Media/Logo.png
+  - CHANGELOG.md
+
+# Written by the workflow from the matching CHANGELOG.md section.
+manual-changelog:
+  filename: .release-notes.md
+  markup-type: markdown

@@ -57,12 +57,14 @@ describe("DB", function()
     ns.DB:Init(nil)
     local rec = ns.DB:Current()
     for _, key in ipairs({ "meta", "instances", "worldBosses", "vault", "mythicPlus",
-      "delves", "equipment", "bags", "watchlist", "legacyBosses" }) do
+      "delves", "equipment", "bags", "watchlist", "legacyBosses", "holidays" }) do
       assert.equals("table", type(rec[key]), key)
     end
     assert.same({}, rec.bags.counts)
     assert.same({}, rec.delves.currencies)
     assert.same({}, rec.vault.activities)
+    assert.same({}, rec.holidays.active)
+    assert.same({}, rec.holidays.done)
     assert.equals(rec, ns.DB:Current())
     assert.equals(rec, ns.db.characters["Player-1-0001"])
   end)
@@ -73,6 +75,8 @@ describe("DB", function()
     assert.equals("Thrall", rec.meta.name)
     assert.same({}, rec.bags.counts)
     assert.equals("table", type(rec.legacyBosses))
+    assert.equals("table", type(rec.holidays.active))
+    assert.equals("table", type(rec.holidays.done))
   end)
 
   it("Forget refuses current character", function()

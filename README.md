@@ -18,7 +18,7 @@ Log in on each character once so it appears in the Warband view.
 
 The minimap button toggles the window on left-click and opens settings on right-click; its tooltip shows how many characters have a Great Vault ready and the highest keystone in the Warband.
 
-Tabs: Raids, Dungeons, World Bosses, Weekly and Legacy. Legacy lists older raids your characters are saved to, one row per raid with a column per character, and a farm list of old world bosses that drop mounts. Click a character, or a Legacy cell, to open that character's detail panel (gear, enchants, consumables, this week).
+Tabs: Raids, Dungeons, World Bosses, Weekly and Legacy. Legacy lists older raids your characters are saved to, one row per raid with a column per character, a farm list of old world bosses that drop mounts, and, while a holiday event runs, its dungeon-finder boss with today's loot status. Click a character, or a Legacy cell, to open that character's detail panel (gear, enchants, consumables, this week).
 
 ## Development
 

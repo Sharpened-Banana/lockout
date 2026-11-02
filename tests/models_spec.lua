@@ -306,6 +306,42 @@ describe("Tab models", function()
       }, ns.Tabs.Legacy.Rows(ctx))
     end)
 
+    it("no live holiday means no Holiday section", function()
+      ctx.db.characters.g1 = { holidays = { active = { [285] = { name = "Headless Horseman", resetAt = NOW - 1 } }, done = {} } }
+      for _, row in ipairs(ns.Tabs.Legacy.Rows(ctx)) do assert.is_false(row.key == "h:holidays") end
+    end)
+
+    it("live holidays head the tab, from any character, sorted by name", function()
+      ctx.db.characters.hidden = { holidays = { active = {
+        [286] = { name = "Lord Ahune", resetAt = NOW + 100 },
+        [285] = { name = "Headless Horseman", resetAt = NOW + 100 } }, done = {} } }
+      ctx.db.characters.other = { holidays = { active = { [285] = { name = "Kopflose Reiter", resetAt = NOW + 100 } } } } -- no done table
+      ctx.db.characters.partial = { holidays = {} }                                                               -- no active table
+      local rows = ns.Tabs.Legacy.Rows(ctx)
+      assert.same({ heading = true, key = "h:holidays", label = "Holiday" }, rows[1])
+      assert.same({ kind = "holiday", key = "hd:285", dungeonID = 285, label = "Headless Horseman" }, rows[2])
+      assert.equals("Lord Ahune", rows[3].label)
+      assert.equals("h:raids", rows[4].key)
+    end)
+
+    it("holiday cells: check when rewarded today, dash otherwise", function()
+      local cols = ns.Tabs.Legacy.Columns(ctx)
+      local row = { kind = "holiday", key = "hd:285", dungeonID = 285, label = "Headless Horseman" }
+      ctx.characters[1].char.holidays = { done = { [285] = { name = "Headless Horseman", resetAt = NOW + 3600 } } }
+      ctx.characters[2].char.holidays = { done = { [285] = { name = "Headless Horseman", resetAt = NOW - 1 } } }
+      local cell = ns.Tabs.Legacy.Cell(row, cols[1], ctx)
+      assert.equals(ns.Theme.Icon.check, cell.text)
+      assert.same(ns.Rows.COLORS.green, cell.color)
+      assert.equals("Headless Horseman", cell.title)
+      assert.same({ { left = "Headless Horseman", right = "resets in 1h 0m" } }, cell.tooltip)
+      assert.equals("–", ns.Tabs.Legacy.Cell(row, cols[2], ctx).text)  -- expired
+      assert.equals("–", ns.Tabs.Legacy.Cell(row, cols[3], ctx).text)  -- no holidays section
+      ctx.characters[1].char.holidays.done[285].resetAt = nil
+      local unknown = ns.Tabs.Legacy.Cell(row, cols[1], ctx)
+      assert.equals(ns.Theme.Icon.check, unknown.text)
+      assert.is_nil(unknown.tooltip)
+    end)
+
     it("columns are the listed characters, in order, class colored", function()
       local cols = ns.Tabs.Legacy.Columns(ctx)
       assert.equals(3, #cols)

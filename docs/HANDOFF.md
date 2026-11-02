@@ -6,7 +6,7 @@ For a local Claude Code session (or a human) picking this up on a machine that c
 
 - The addon was built in a cloud session and merged to `main` (PR #1). It is feature-complete against the spec, but it **has never been run in the WoW client**.
 - `lua5.1 tests/run.lua` passes 226 tests, and `luacheck .` reports 0 warnings. The tests run against a WoW API mock. They catch logic and Lua errors, not real-client behaviour.
-- Target: Retail, Midnight patch 12.0.7 (`## Interface: 120007` in `Lockout.toc`).
+- Target: Retail, Midnight patch 12.1.5 (`## Interface: 120105` in `Lockout.toc`). Patch references elsewhere in the docs that say 12.0.7 are from when the addon was first built.
 - Design spec: `docs/superpowers/specs/2026-10-30-lockout-addon-design.md`. This is the source of truth for intent.
 - Implementation plan: `docs/superpowers/plans/2026-10-30-lockout-addon.md`. Its Global Constraints still apply to new work.
 
@@ -73,12 +73,17 @@ Collectors (logged-in character only)  →  LockoutDB.characters[GUID]  →  pur
   - **`ScanSet`:** the defaults plus every item any character has a watchlist entry for, on or off. Switched-off items keep being counted.
 - **`Core/Season.lua`:** current-season raids, dungeons and M+ maps from the Encounter Journal and `C_ChallengeMode`. It is cached per build number and rebuilt once per session.
 - **`Collectors/*`:**
-  - Character, Equipment, Instances, WorldBosses, Vault, MythicPlus, Delves, Bags.
+  - Character, Equipment, Instances, WorldBosses, Vault, MythicPlus, Delves, Bags, Holidays.
   - Bags reads only the backpack, bags 1–4 and the reagent bag, never any bank.
+  - Holidays reads the dungeon finder (`GetNumRandomDungeons` list, then the holiday flag, not the random-queue type, and offered per `IsLFGDungeonJoinable`; `GetLFGDungeonRewards` for "looted today") into `holidays = { active, done }`, each keyed by dungeon ID. It resets daily (`GetSecondsUntilDailyReset`) and needs `RequestLFDPlayerLockInfo`, called on login and after `LFG_COMPLETION_REWARD`.
   - Instance keys are `"<mapID>:<difficultyID>"`; Mythic 0 is difficulty 23.
-- **`UI/Rows.lua` and `UI/Tabs/*`:** pure display models. Each tab provides `Columns(ctx)` and `Cell(char, col, ctx) → { text, color, tooltip }`. `"–"` means nothing to show. A tab with `Rows(ctx)` (Legacy) lists its own rows instead of characters: it gets the filtered, sorted character rows as `ctx.characters`, its cells are `Cell(row, col, ctx)`, and its `rowHeader` puts the grid in plain-row mode (no star, level, ilvl or sorting). Legacy rows carry a `kind` (`raid` or `boss`) or `heading = true`; headings are non-interactive. `legacyBosses` is a record section (see `SECTIONS` in `Core/DB.lua`), filled by the WorldBosses collector from `Content.LEGACY_WORLD_BOSSES`.
+- **`UI/Rows.lua` and `UI/Tabs/*`:** pure display models. Each tab provides `Columns(ctx)` and `Cell(char, col, ctx) → { text, color, tooltip }`. `"–"` means nothing to show. A tab with `Rows(ctx)` (Legacy) lists its own rows instead of characters: it gets the filtered, sorted character rows as `ctx.characters`, its cells are `Cell(row, col, ctx)`, and its `rowHeader` puts the grid in plain-row mode (no star, level, ilvl or sorting). Legacy rows carry a `kind` (`raid`, `boss` or `holiday`) or `heading = true`; headings are non-interactive. `legacyBosses` and `holidays` (`active`/`done`, daily reset) are record sections (see `SECTIONS` in `Core/DB.lua`); `legacyBosses` is filled by the WorldBosses collector from `Content.LEGACY_WORLD_BOSSES`, `holidays` by the Holidays collector.
 - **`UI/Theme.lua`, `Grid.lua`, `MainFrame.lua`, `DetailPanel.lua`, `Minimap.lua`, `Settings.lua`:** rendering only.
   - **Load order:** the TOC order matters. `tests/toc_spec.lua` checks that it matches `tests/loader.lua`.
+
+## Releasing
+
+Bump `## Version:` in `Lockout.toc`, add a matching `## <version> (<date>)` section to `CHANGELOG.md`, commit, then push a tag `v<version>`. `.github/workflows/release.yml` runs the tests, checks that the tag, TOC and changelog agree, packages with the BigWigs packager and uploads to CurseForge (project 1779233). It needs the `CF_API_TOKEN` repository secret. A tag with no `alpha` or `beta` in it uploads as a Release, and the game version comes from `## Interface:`.
 
 ## Testing conventions
 

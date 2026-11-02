@@ -242,3 +242,149 @@ describe("Delves collector", function()
     assert.equals(mock.now, rec.delves.updatedAt)
   end)
 end)
+
+describe("Holidays collector", function()
+  local dungeons, infos, rewards, joinable, requested
+
+  local function stubs()
+    dungeons, infos, rewards, joinable, requested = {}, {}, {}, {}, 0
+    GetNumRandomDungeons = function() return #dungeons end
+    GetLFGRandomDungeonInfo = function(i) local d = dungeons[i]; return d.id, d.name end
+    -- typeID is the 2nd return, isHoliday the 15th
+    GetLFGDungeonInfo = function(id)
+      local h = infos[id]
+      if not h then return nil end
+      return h.name, h.typeID or 1, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 5, "", h.holiday
+    end
+    IsLFGDungeonJoinable = function(id)
+      local j = joinable[id] or { true, true, false }
+      return j[1], j[2], j[3]
+    end
+    GetLFGDungeonRewards = function(id) return rewards[id] == true end
+    RequestLFDPlayerLockInfo = function() requested = requested + 1 end
+    C_DateAndTime = { GetSecondsUntilDailyReset = function() return 3600 end }
+  end
+
+  local function setup(install)
+    local ns = loadAddon({ "Collectors/Holidays.lua" }, function()
+      stubs()
+      if install then install() end
+    end)
+    return ns, ns.collectors.Holidays, ns.DB:Current()
+  end
+
+  it("is registered with its events and requirements", function()
+    local _, def = setup()
+    assert.same({ "LFG_UPDATE_RANDOM_INFO", "LFG_COMPLETION_REWARD" }, def.events)
+    assert.same({
+      "GetNumRandomDungeons", "GetLFGRandomDungeonInfo", "GetLFGDungeonInfo", "IsLFGDungeonJoinable",
+      "GetLFGDungeonRewards", "RequestLFDPlayerLockInfo", "C_DateAndTime.GetSecondsUntilDailyReset",
+    }, def.requires)
+    assert.is_nil(def.disabled)
+  end)
+
+  it("requests dungeon info on login and after a reward", function()
+    local _, def = setup()
+    def.OnLogin()
+    assert.equals(1, requested)
+    def.OnEvent("LFG_COMPLETION_REWARD")
+    assert.equals(2, requested)
+    def.OnEvent("LFG_UPDATE_RANDOM_INFO")
+    assert.equals(2, requested)
+  end)
+
+  it("holiday dungeons are active, done when rewarded, others skipped", function()
+    local _, def, rec = setup()
+    dungeons = { { id = 285, name = "Headless Horseman" }, { id = 286, name = "Ahune" }, { id = 9, name = "Random Dungeon" } }
+    infos[285], infos[286], infos[9] = { holiday = true }, { holiday = true }, { holiday = false }
+    rewards[285] = true
+    def:Collect(rec, mock.now)
+    assert.same({
+      active = {
+        [285] = { name = "Headless Horseman", resetAt = mock.now + 3600 },
+        [286] = { name = "Ahune", resetAt = mock.now + 3600 },
+      },
+      done = { [285] = { name = "Headless Horseman", resetAt = mock.now + 3600 } },
+    }, rec.holidays)
+  end)
+
+  -- Values from the 12.0.7 client during Hallow's End in a Warlords Timewalking week: every
+  -- Timewalking random has the holiday flag and false in the 18th return.
+  it("keeps only the holiday boss, not live or hidden Timewalking", function()
+    local _, def, rec = setup()
+    dungeons = {
+      { id = 285, name = "The Headless Horseman" },
+      { id = 1971, name = "Random Timewalking Dungeon (Warlords of Draenor)" },
+      { id = 744, name = "Random Timewalking Dungeon (Burning Crusade)" },
+      { id = 2746, name = "Random Dungeon (Midnight)" },
+    }
+    infos[285] = { holiday = true, typeID = 1 }
+    infos[1971] = { holiday = true, typeID = 6 }
+    infos[744] = { holiday = true, typeID = 6 }
+    infos[2746] = { holiday = false, typeID = 6 }
+    joinable[744] = { false, false, true }
+    rewards[744] = true -- the game also reports done for hidden entries
+    def:Collect(rec, mock.now)
+    assert.same({
+      active = { [285] = { name = "The Headless Horseman", resetAt = mock.now + 3600 } },
+      done = {},
+    }, rec.holidays)
+  end)
+
+  it("a holiday boss hidden from the dungeon finder is not live", function()
+    local _, def, rec = setup()
+    dungeons = { { id = 287, name = "Coren Direbrew" } }
+    infos[287] = { holiday = true, typeID = 1 }
+    joinable[287] = { false, false, true }
+    def:Collect(rec, mock.now)
+    assert.same({ active = {}, done = {} }, rec.holidays)
+  end)
+
+  it("a holiday boss this character can't queue for yet is still live", function()
+    local _, def, rec = setup()
+    dungeons = { { id = 285, name = "The Headless Horseman" } }
+    infos[285] = { holiday = true, typeID = 1 }
+    joinable[285] = { false, false, false } -- shown greyed out, as for a low-level character
+    def:Collect(rec, mock.now)
+    assert.equals("The Headless Horseman", rec.holidays.active[285].name)
+  end)
+
+  it("falls back to the dungeon info name", function()
+    local _, def, rec = setup()
+    dungeons = { { id = 287 } }
+    infos[287] = { name = "Coren Direbrew", holiday = true }
+    def:Collect(rec, mock.now)
+    assert.equals("Coren Direbrew", rec.holidays.active[287].name)
+  end)
+
+  it("empty list writes empty tables and drops stale entries", function()
+    local _, def, rec = setup()
+    rec.holidays = { active = { [1] = { name = "Old" } }, done = {} }
+    def:Collect(rec, mock.now)
+    assert.same({ active = {}, done = {} }, rec.holidays)
+  end)
+
+  it("a dungeon without info is skipped", function()
+    local _, def, rec = setup()
+    dungeons = { { id = 400, name = "Loading" }, { id = 285, name = "Headless Horseman" } }
+    infos[285] = { holiday = true }
+    def:Collect(rec, mock.now)
+    assert.same({ [285] = { name = "Headless Horseman", resetAt = mock.now + 3600 } }, rec.holidays.active)
+  end)
+
+  it("unknown daily reset leaves resetAt nil", function()
+    local _, def, rec = setup(function()
+      C_DateAndTime.GetSecondsUntilDailyReset = function() return nil end
+    end)
+    dungeons = { { id = 285, name = "Headless Horseman" } }
+    infos[285] = { holiday = true }
+    def:Collect(rec, mock.now)
+    assert.is_nil(rec.holidays.active[285].resetAt)
+    assert.equals("Headless Horseman", rec.holidays.active[285].name)
+  end)
+
+  it("disables itself without the rewards API", function()
+    local _, def = setup(function() GetLFGDungeonRewards = nil end)
+    assert.is_true(def.disabled)
+  end)
+end)
