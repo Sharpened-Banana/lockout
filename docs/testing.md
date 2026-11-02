@@ -33,6 +33,9 @@ below needs the real client (Retail 12.0.x). Enable errors first:
 - [ ] World Bosses tab: a killed weekly boss shows a check with its reset tooltip.
 - [ ] The Legacy tab lists each older raid any shown character is saved to as a row, with one class-colored column per character. The Raids tab shows only season raids.
 - [ ] On the Legacy tab, the frozen column header reads "Raid" with no sort arrows, clicking a raid name does nothing, and clicking a cell opens that character's detail panel.
+- [ ] Each listed Legacy boss's ID checks out with `/dump C_QuestLog.IsQuestFlaggedCompleted(<id>)`: `false` before a kill and `true` after.
+- [ ] A Legacy boss row shows a check only for the character that killed it, and clears at the weekly reset.
+- [ ] The Legacy tab's "Raids" and "World bosses" headings show in blue and do nothing when clicked.
 - [ ] At the minimum window width, the five tab buttons don't overlap the "Current realm" toggle.
 - [ ] Extended lockout: with reset = 0 the cell still displays sensibly (no "resets in 0s" or error).
 

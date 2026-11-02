@@ -39,8 +39,17 @@ Content.ENCHANT_SLOTS = { [1] = true, [3] = true, [5] = true, [7] = true, [8] = 
 Content.WORLD_BOSSES = {}
 
 -- Old world bosses worth farming, shown on the Legacy tab. Shape: { key = "q<questID>", questID = n, name = "...", drop = "..." or nil }
--- needs IDs (patch 12.0.7)
-Content.LEGACY_WORLD_BOSSES = {}
+-- questID is each boss's hidden weekly loot-lockout quest ("Short-Supply Reward"), cross-checked against SavedInstances' WorldBoss.lua.
+-- Ordered by expansion, then name.
+Content.LEGACY_WORLD_BOSSES = {
+  -- Mists of Pandaria
+  { key = "q32098", questID = 32098, name = "Galleon", drop = "Son of Galleon" }, -- Galleon
+  { key = "q32518", questID = 32518, name = "Nalak", drop = "Thundering Cobalt Cloud Serpent" }, -- Nalak
+  { key = "q32519", questID = 32519, name = "Oondasta", drop = "Cobalt Primordial Direhorn" }, -- Oondasta
+  { key = "q32099", questID = 32099, name = "Sha of Anger", drop = "Heavenly Onyx Cloud Serpent" }, -- Sha of Anger
+  -- Warlords of Draenor
+  { key = "q37464", questID = 37464, name = "Rukhmar", drop = "Solar Spirehawk" }, -- Rukhmar
+}
 
 -- Delve currencies (Restored Coffer Key equivalent, coffer key shards). Shape: { id = currencyID, name = "..." }
 -- needs IDs (patch 12.0.7)

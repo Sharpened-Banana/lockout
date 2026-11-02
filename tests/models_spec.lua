@@ -271,6 +271,7 @@ describe("Tab models", function()
     end
 
     before_each(function()
+      ns.Content.LEGACY_WORLD_BOSSES = {} -- the shipped farm list is covered by the Content data test
       C_ClassColor = {
         GetClassColor = function(classFile)
           if classFile == "MAGE" then return { r = 0.25, g = 0.78, b = 0.92 } end
@@ -590,5 +591,22 @@ describe("Theme status markers", function()
       assert.equals("string", type(markup))
       assert.truthy(markup:find("^|T[^|]+|t$"))
     end
+  end)
+end)
+
+describe("Content data", function()
+  it("world boss lists are well formed", function()
+    local ns = loader.load(loader.CORE)
+    for _, list in ipairs({ ns.Content.WORLD_BOSSES, ns.Content.LEGACY_WORLD_BOSSES }) do
+      local seen = {}
+      for _, boss in ipairs(list) do
+        assert.equals("number", type(boss.questID))
+        assert.equals("q" .. boss.questID, boss.key)
+        assert.equals("string", type(boss.name))
+        assert(not seen[boss.key], "duplicate " .. boss.key)
+        seen[boss.key] = true
+      end
+    end
+    assert.truthy(#ns.Content.LEGACY_WORLD_BOSSES > 0)
   end)
 end)
