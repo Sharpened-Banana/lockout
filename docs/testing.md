@@ -36,7 +36,11 @@ below needs the real client (Retail 12.0.x). Enable errors first:
 - [ ] Each listed Legacy boss's ID checks out with `/dump C_QuestLog.IsQuestFlaggedCompleted(<id>)`: `false` before a kill and `true` after.
 - [ ] A Legacy boss row shows a check only for the character that killed it, and clears at the weekly reset.
 - [ ] After looting a listed boss, its check appears without a /reload (it may take a moment after the kill).
-- [ ] The Legacy tab's "Raids" and "World bosses" headings show in blue and do nothing when clicked.
+- [ ] The Legacy tab's "Holiday", "Raids" and "World bosses" headings show in blue and do nothing when clicked.
+- [ ] During a holiday event, its boss appears under a "Holiday" heading at the top of the Legacy tab.
+- [ ] After the day's first kill, that character gets a check without a `/reload`, and the check clears at the daily reset.
+- [ ] Outside events, there is no Holiday section.
+- [ ] `/dump select(15, GetLFGDungeonInfo(<id>))` returns true for the holiday dungeon. Take the ID from `/dump GetLFGRandomDungeonInfo(i)`. This confirms the holiday flag's return position on 12.0.7.
 - [ ] At the minimum window width, the five tab buttons don't overlap the "Current realm" toggle.
 - [ ] Extended lockout: with reset = 0 the cell still displays sensibly (no "resets in 0s" or error).
 
