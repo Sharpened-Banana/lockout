@@ -52,7 +52,7 @@ function DB:Init(saved)
   return db
 end
 
-local SECTIONS = { "meta", "instances", "worldBosses", "vault", "mythicPlus", "delves", "equipment", "bags", "watchlist" }
+local SECTIONS = { "meta", "instances", "worldBosses", "vault", "mythicPlus", "delves", "equipment", "bags", "watchlist", "legacyBosses" }
 
 function DB.Current()
   local guid = UnitGUID("player")

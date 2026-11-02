@@ -57,7 +57,7 @@ describe("DB", function()
     ns.DB:Init(nil)
     local rec = ns.DB:Current()
     for _, key in ipairs({ "meta", "instances", "worldBosses", "vault", "mythicPlus",
-      "delves", "equipment", "bags", "watchlist" }) do
+      "delves", "equipment", "bags", "watchlist", "legacyBosses" }) do
       assert.equals("table", type(rec[key]), key)
     end
     assert.same({}, rec.bags.counts)
@@ -72,6 +72,7 @@ describe("DB", function()
     local rec = ns.DB:Current()
     assert.equals("Thrall", rec.meta.name)
     assert.same({}, rec.bags.counts)
+    assert.equals("table", type(rec.legacyBosses))
   end)
 
   it("Forget refuses current character", function()

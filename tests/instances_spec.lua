@@ -150,6 +150,26 @@ describe("WorldBosses collector", function()
     assert.same({ q111 = { name = "Boss A", resetAt = mock.now + 7200 } }, rec.worldBosses)
   end)
 
+  it("legacy bosses go to legacyBosses with the weekly reset", function()
+    local ns, def, rec = setup()
+    ns.Content.LEGACY_WORLD_BOSSES = {
+      { key = "q333", questID = 333, name = "Old Boss", drop = "Mount" },
+      { key = "q444", questID = 444, name = "Other Old Boss" },
+    }
+    completed[333] = true
+    def:Collect(rec, mock.now)
+    assert.same({ q333 = { name = "Old Boss", resetAt = mock.now + 7200 } }, rec.legacyBosses)
+    assert.same({}, rec.worldBosses)
+  end)
+
+  it("legacy bosses rebuild from scratch", function()
+    local ns, def, rec = setup()
+    ns.Content.LEGACY_WORLD_BOSSES = { { key = "q333", questID = 333, name = "Old Boss" } }
+    rec.legacyBosses.stale = { name = "Stale", resetAt = 1 }
+    def:Collect(rec, mock.now)
+    assert.same({}, rec.legacyBosses)
+  end)
+
   it("saved world boss api", function()
     local _, def, rec = setup(installSaved)
     savedBosses = { { name = "Saved Boss", id = 77, reset = 5000 } }

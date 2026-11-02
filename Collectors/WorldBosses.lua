@@ -29,5 +29,13 @@ ns.RegisterCollector({
     end
 
     record.worldBosses = bosses
+
+    local legacy = {}
+    for _, boss in ipairs(ns.Content.LEGACY_WORLD_BOSSES) do
+      if C_QuestLog.IsQuestFlaggedCompleted(boss.questID) then
+        legacy[boss.key] = { name = boss.name, resetAt = Reset.Absolute(now, weekly) }
+      end
+    end
+    record.legacyBosses = legacy
   end,
 })

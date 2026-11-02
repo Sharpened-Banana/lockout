@@ -129,6 +129,7 @@ describe("end to end", function()
       assert.equals("Thrall", current.meta.name)
       assert.equals(645, current.equipment[1].ilvl)
       assert.truthy(current.instances["2100:15"])
+      assert.same({}, current.legacyBosses)
 
       SlashCmdList.LOCKOUT("")
       assert.is_true(LockoutMainFrame:IsShown())

@@ -38,6 +38,10 @@ Content.ENCHANT_SLOTS = { [1] = true, [3] = true, [5] = true, [7] = true, [8] = 
 -- needs IDs (patch 12.0.7)
 Content.WORLD_BOSSES = {}
 
+-- Old world bosses worth farming, shown on the Legacy tab. Shape: { key = "q<questID>", questID = n, name = "...", drop = "..." or nil }
+-- needs IDs (patch 12.0.7)
+Content.LEGACY_WORLD_BOSSES = {}
+
 -- Delve currencies (Restored Coffer Key equivalent, coffer key shards). Shape: { id = currencyID, name = "..." }
 -- needs IDs (patch 12.0.7)
 Content.DELVE_CURRENCIES = {}
