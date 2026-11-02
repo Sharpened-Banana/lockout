@@ -91,7 +91,6 @@ describe("UI smoke", function()
     ns = loader.load(nil, install)
     ns.DB:Init(nil)
     seed(ns.db, mock.now)
-    ns.db.settings.showLegacy = true
     -- Record row clicks on their way to the real detail panel.
     detail = {}
     local toggle = ns.Detail.Toggle
@@ -119,13 +118,15 @@ describe("UI smoke", function()
     assert.equals(ns.UI.frame, LockoutMainFrame)
     assert.is_true(LockoutMainFrame:IsShown())
 
+    ns.Content.LEGACY_WORLD_BOSSES = {}
     for _, name in ipairs(ns.TabOrder) do
       ns.UI:SelectTab(name)
       assert.equals(name, ns.UI.selectedTab)
       ns.UI:Refresh()
-      assert.equals(28, #grid.rows)
+      assert.equals(name == "Legacy" and 2 or 28, #grid.rows)
     end
     -- default sort: ilvl descending
+    ns.UI:SelectTab("Raids")
     assert.equals("Thrall", grid.slots[1].name:GetText())
     assert.equals("80", grid.slots[1].level:GetText())
     assert.equals("640", grid.slots[1].ilvl:GetText())
@@ -145,10 +146,101 @@ describe("UI smoke", function()
     assert.equals(ns.Theme.Icon.check .. " +12", grid.slots[1].cells[1].text:GetText())
 
     ns.UI:SelectTab("Raids")
-    -- no season raids from the EJ stub; the legacy column comes from Thrall's lockout
+    -- no season raids from the EJ stub; Thrall's other raid lives on the Legacy tab
+    assert.equals(0, #grid.columns)
+  end)
+
+  it("legacy tab lists raids down the side and characters across", function()
+    ns.Content.LEGACY_WORLD_BOSSES = {}
+    local grid = open()
+    ns.UI:SelectTab("Legacy")
+    assert.same({ "Raids", "Alpha Keep" }, labels(grid.rows))
+    assert.equals(28, #grid.columns)
+    assert.equals("Thrall", grid.dataHeaders[1].label:GetText())
+    assert.same({ 0, 0.44, 0.87 }, { grid.dataHeaders[1].label:GetTextColor() })
+    assert.equals("Jaina", grid.dataHeaders[2].label:GetText())
+
+    local slot = grid.slots[2]
+    assert.equals("Alpha Keep", slot.name:GetText())
+    assert.same({ 0.9, 0.9, 0.9 }, { slot.name:GetTextColor() })
+    assert.is_false(slot.star:IsShown())
+    assert.is_false(slot.level:IsShown())
+    assert.is_false(slot.ilvl:IsShown())
+    assert.is_false(slot.left.deco.selected:IsShown())
+    assert.equals("H 4/8", slot.cells[1].text:GetText())
+    assert.equals("–", slot.cells[2].text:GetText())
+
+    -- the frozen header names the rows and does not sort
+    assert.equals("Name", grid.headers.name.label:GetText())
+    assert.is_false(grid.headers.name:IsEnabled())  -- no hover highlight on a header that does nothing
+    assert.is_false(grid.headers.level:IsShown())
+    assert.is_false(grid.headers.ilvl:IsShown())
+    assert.is_false(grid.headers.name.arrow:IsShown())
+    click(grid.headers.name)
+    assert.equals("ilvl", ns.db.settings.sortKey)
+
+    -- a raid has no detail panel; a cell opens its character's
+    click(slot.left)
+    assert.same({}, detail)
+    click(slot.cells[2])
+    assert.same({ "Player-2-0002" }, detail)
+    assert.equals("Player-2-0002", ns.UI.selectedGuid)
+
+    -- the name filter narrows the character columns
+    ns.UI.filter:SetText("thr")
+    ns.UI.filter:GetScript("OnTextChanged")(ns.UI.filter, true)
     assert.equals(1, #grid.columns)
-    assert.equals("H 4/8", grid.slots[1].cells[1].text:GetText())
-    assert.equals("–", grid.slots[2].cells[1].text:GetText())
+    ns.UI.filter:SetText("jai")
+    ns.UI.filter:GetScript("OnTextChanged")(ns.UI.filter, true)
+    assert.equals(0, #grid.rows)
+
+    -- back on a character tab, the character column returns
+    ns.UI.filter:SetText("")
+    ns.UI.filter:GetScript("OnTextChanged")(ns.UI.filter, true)
+    ns.UI:SelectTab("Raids")
+    assert.equals("Character", grid.headers.name.label:GetText())
+    assert.is_true(grid.headers.name:IsEnabled())
+    assert.is_true(grid.headers.level:IsShown())
+    assert.is_true(grid.headers.ilvl:IsShown())
+    assert.is_true(grid.slots[1].star:IsShown())
+    assert.is_true(grid.slots[1].level:IsShown())
+    assert.equals("Thrall", grid.slots[1].name:GetText())
+    click(grid.headers.name)
+    assert.equals("name", ns.db.settings.sortKey)
+  end)
+
+  it("legacy heading rows are accent labels that open nothing", function()
+    local grid = open()
+    ns.Content.LEGACY_WORLD_BOSSES = { { key = "q333", questID = 333, name = "Old Boss", drop = "Mount" } }
+    local jaina = ns.db.characters["Player-2-0002"]
+    jaina.legacyBosses = { q333 = { name = "Old Boss", resetAt = mock.now + 3600 } }
+    -- a second old raid puts the World bosses heading on an even (striped) row
+    jaina.instances = { ["300:14"] = { name = "Beta Ruins", mapID = 300, difficultyID = 14, difficultyName = "Normal",
+      isRaid = true, resetAt = mock.now + 3600, killed = 1, total = 5, encounters = {} } }
+    ns.UI:SelectTab("Legacy")
+    assert.same({ "Raids", "Alpha Keep", "Beta Ruins", "World bosses", "Old Boss" }, labels(grid.rows))
+
+    local heading = grid.slots[4]
+    assert.same(ns.Theme.accent, { heading.name:GetTextColor() })
+    assert.is_false(heading.left.deco.zebra:IsShown())
+    assert.equals("", heading.cells[1].text:GetText())
+    heading.left:GetScript("OnEnter")(heading.left)
+    assert.is_false(heading.left.deco.hover:IsShown())
+    click(heading.left)
+    click(heading.cells[2])
+    assert.same({}, detail)
+
+    local boss = grid.slots[5]
+    assert.equals(ns.Theme.Icon.check, boss.cells[2].text:GetText())   -- Jaina killed it
+    assert.equals("–", boss.cells[1].text:GetText())
+    click(boss.cells[2])
+    assert.same({ "Player-2-0002" }, detail)
+
+    -- a filter that matches nobody keeps the boss rows, with no columns
+    ns.UI.filter:SetText("zzz")
+    ns.UI.filter:GetScript("OnTextChanged")(ns.UI.filter, true)
+    assert.same({ "World bosses", "Old Boss" }, labels(grid.rows))
+    assert.equals(0, #grid.columns)
   end)
 
   it("unknown tab names are ignored", function()
@@ -242,6 +334,7 @@ describe("UI smoke", function()
 
   it("row and cell clicks toggle the detail panel", function()
     local grid = open()
+    ns.UI:SelectTab("Dungeons")
     click(grid.slots[1].left)
     assert.same({ "Player-1-0001" }, detail)
     assert.equals("Player-1-0001", ns.UI.selectedGuid)
@@ -264,6 +357,7 @@ describe("UI smoke", function()
 
   it("detail panel keeps the grid selection in step", function()
     local grid = open()
+    ns.UI:SelectTab("Dungeons")
     local function selected() return grid.slots[2].left.deco.selected:IsShown() end
     click(grid.slots[2].left)  -- Jaina
     local panel = ns.Detail.panel
@@ -344,8 +438,10 @@ describe("UI smoke", function()
   end)
 
   it("cell hover shows the cell tooltip", function()
+    ns.Content.LEGACY_WORLD_BOSSES = {}
     local grid = open()
-    local cell = grid.slots[1].cells[1]
+    ns.UI:SelectTab("Legacy")
+    local cell = grid.slots[2].cells[1]
     cell:GetScript("OnEnter")(cell)
     assert.equals("Alpha Keep", tooltipLines[1])
     assert.equals("Heroic | resets in 1d 0h", tooltipLines[2])
@@ -393,9 +489,9 @@ describe("UI smoke", function()
     assert.same({ point = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 40, y = 500, w = 900, h = 460 },
       ns.db.settings.window)
 
-    frame:SetSize(700, 350)
+    frame:SetSize(760, 350)
     ns.UI.grip:GetScript("OnMouseUp")(ns.UI.grip)
-    assert.equals(700, ns.db.settings.window.w)
+    assert.equals(760, ns.db.settings.window.w)
     assert.equals(350, ns.db.settings.window.h)
 
     -- a fresh session restores it
@@ -403,7 +499,7 @@ describe("UI smoke", function()
     ns = loader.load(nil, install)
     ns.DB:Init(saved)
     ns.UI:Show()
-    assert.equals(700, ns.UI.frame:GetWidth())
+    assert.equals(760, ns.UI.frame:GetWidth())
     assert.same({ "TOPLEFT", UIParent, "BOTTOMLEFT", 40, 500 }, { ns.UI.frame:GetPoint(1) })
   end)
 
@@ -537,8 +633,7 @@ describe("Minimap and Settings", function()
     local min, scale = settingsLog.widgets.minLevel, settingsLog.widgets.scale
     assert.same({ 1, 90, 1 }, { min.min, min.max, min.step })
     assert.same({ 0.7, 1.5, 0.05 }, { scale.min, scale.max, scale.step })
-    assert.equals("checkbox", settingsLog.widgets.showLegacy)
-    assert.equals("Show other saved instances", settingsLog.settings.Lockout_ShowLegacy.label)
+    assert.is_nil(settingsLog.settings.Lockout_ShowLegacy)
 
     n.UI:Show()
     local grid = n.UI.grid
@@ -553,8 +648,6 @@ describe("Minimap and Settings", function()
     assert.equals(1.25, n.db.settings.scale)
     assert.equals(1.25, n.UI.frame:GetScale())
 
-    settingsLog.settings.Lockout_ShowLegacy:Set(false)
-    assert.is_false(n.db.settings.showLegacy)
     for _, line in ipairs(n.log) do assert.is_nil(line:find("callback failed", 1, true)) end
   end)
 
@@ -599,7 +692,7 @@ describe("Minimap and Settings", function()
     n.Fire("DB_READY")
     assert.equals("Lockout", created.name)
     assert.equals("launcher", created.obj.type)
-    assert.equals("Interface\\Icons\\INV_Misc_Key_14", created.obj.icon)
+    assert.equals("Interface\\AddOns\\Lockout\\Media\\Icon", created.obj.icon)
     assert.equals("Lockout", registered.name)
     assert.equals(n.db.settings.minimap, registered.db)
 

@@ -9,7 +9,7 @@ describe("DB", function()
 
   it("fresh init", function()
     local db = ns.DB:Init(nil)
-    assert.equals(1, LockoutDB.schema)
+    assert.equals(2, LockoutDB.schema)
     assert.equals(10, LockoutDB.settings.minLevel)
     assert.equals("ilvl", LockoutDB.settings.sortKey)
     assert.equals(db, LockoutDB)
@@ -36,6 +36,13 @@ describe("DB", function()
     assert.is_nil(b.settings.favorites["x"])
   end)
 
+  it("schema 2 drops the legacy-columns setting", function()
+    ns.DB:Init({ schema = 1, settings = { showLegacy = true, minLevel = 5 }, characters = {} })
+    assert.equals(2, LockoutDB.schema)
+    assert.is_nil(LockoutDB.settings.showLegacy)
+    assert.equals(5, LockoutDB.settings.minLevel)
+  end)
+
   it("runs migrations in order", function()
     local ran = {}
     ns.DB.SCHEMA = 3
@@ -50,7 +57,7 @@ describe("DB", function()
     ns.DB:Init(nil)
     local rec = ns.DB:Current()
     for _, key in ipairs({ "meta", "instances", "worldBosses", "vault", "mythicPlus",
-      "delves", "equipment", "bags", "watchlist" }) do
+      "delves", "equipment", "bags", "watchlist", "legacyBosses" }) do
       assert.equals("table", type(rec[key]), key)
     end
     assert.same({}, rec.bags.counts)
@@ -65,6 +72,7 @@ describe("DB", function()
     local rec = ns.DB:Current()
     assert.equals("Thrall", rec.meta.name)
     assert.same({}, rec.bags.counts)
+    assert.equals("table", type(rec.legacyBosses))
   end)
 
   it("Forget refuses current character", function()

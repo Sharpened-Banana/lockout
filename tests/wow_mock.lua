@@ -62,6 +62,8 @@ property("Scale", 1)
 property("HorizontalScroll", 0)
 property("VerticalScroll", 0)
 property("Texture", nil)
+property("Enabled", true)
+frameMethods.IsEnabled = frameMethods.GetEnabled
 
 function frameMethods.SetSize(self, w, h)
   self:SetWidth(w)

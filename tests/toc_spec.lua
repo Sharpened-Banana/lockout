@@ -25,6 +25,16 @@ describe("Lockout.toc", function()
     end
   end)
 
+  it("icon texture ships with the addon", function()
+    local icon
+    for line in io.lines("Lockout.toc") do
+      icon = icon or line:match("^## IconTexture:%s*(%S+)")
+    end
+    local rel = icon and icon:match("^Interface\\AddOns\\Lockout\\(.+)$")
+    assert(rel, "IconTexture is not an addon texture: " .. tostring(icon))
+    assert(exists(rel:gsub("\\", "/") .. ".tga"), "icon file missing for " .. icon)
+  end)
+
   it("loads the same Lua files, in the same order, as the test loader", function()
     local lua = {}
     for _, path in ipairs(tocFiles()) do

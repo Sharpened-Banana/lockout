@@ -31,7 +31,13 @@ below needs the real client (Retail 12.0.x). Enable errors first:
       (log in again, nothing reappears).
 - [ ] Dungeons tab: a saved M0 dungeon shows a check, season-best M+ level appears per dungeon.
 - [ ] World Bosses tab: a killed weekly boss shows a check with its reset tooltip.
-- [ ] With "show other saved instances" on, older raids a character is saved to get extra columns.
+- [ ] The Legacy tab lists each older raid any shown character is saved to as a row, with one class-colored column per character. The Raids tab shows only season raids.
+- [ ] On the Legacy tab, the frozen column header reads "Name" with no sort arrows, clicking a raid name does nothing, and clicking a cell opens that character's detail panel.
+- [ ] Each listed Legacy boss's ID checks out with `/dump C_QuestLog.IsQuestFlaggedCompleted(<id>)`: `false` before a kill and `true` after.
+- [ ] A Legacy boss row shows a check only for the character that killed it, and clears at the weekly reset.
+- [ ] After looting a listed boss, its check appears without a /reload (it may take a moment after the kill).
+- [ ] The Legacy tab's "Raids" and "World bosses" headings show in blue and do nothing when clicked.
+- [ ] At the minimum window width, the five tab buttons don't overlap the "Current realm" toggle.
 - [ ] Extended lockout: with reset = 0 the cell still displays sensibly (no "resets in 0s" or error).
 
 ## Weekly
@@ -69,9 +75,10 @@ below needs the real client (Retail 12.0.x). Enable errors first:
 ## Minimap and settings
 
 - [ ] The minimap button appears; left-click toggles the window, right-click opens the settings panel.
+- [ ] The blue padlock icon (`Media/Icon.tga`) shows on the minimap button and in the AddOns list, not a green "missing texture" square.
 - [ ] Tooltip shows "Vault ready: N characters" and "Highest key: +L Dungeon (Character)".
 - [ ] `/lockout config` opens Options > AddOns > Lockout.
-- [ ] The settings panel has: minimum level (1-90), show minimap button, show other saved instances, window scale
+- [ ] The settings panel has: minimum level (1-90), show minimap button, window scale
       (0.7-1.5). Each change takes effect immediately; hiding the button hides it at once and persists across `/reload`.
 - [ ] Test with the libraries absent (delete `Libs/`): no Lua error, `/lockout debug` shows "minimap libs missing",
       the window and `/lockout config` still work.

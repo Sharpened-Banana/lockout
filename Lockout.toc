@@ -4,7 +4,7 @@
 ## Author: lonezebra
 ## Version: @project-version@
 ## SavedVariables: LockoutDB
-## IconTexture: Interface\Icons\INV_Misc_Key_14
+## IconTexture: Interface\AddOns\Lockout\Media\Icon
 
 embeds.xml
 
@@ -34,6 +34,7 @@ UI\Tabs\Raids.lua
 UI\Tabs\Dungeons.lua
 UI\Tabs\WorldBosses.lua
 UI\Tabs\Weekly.lua
+UI\Tabs\Legacy.lua
 UI\Grid.lua
 UI\DetailPanel.lua
 UI\MainFrame.lua

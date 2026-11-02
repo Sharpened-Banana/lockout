@@ -30,7 +30,7 @@ loader.ALL = existing({
   "Collectors/WorldBosses.lua", "Collectors/Vault.lua", "Collectors/MythicPlus.lua",
   "Collectors/Delves.lua", "Collectors/Bags.lua",
   "UI/Theme.lua", "UI/Rows.lua",
-  "UI/Tabs/Raids.lua", "UI/Tabs/Dungeons.lua", "UI/Tabs/WorldBosses.lua", "UI/Tabs/Weekly.lua",
+  "UI/Tabs/Raids.lua", "UI/Tabs/Dungeons.lua", "UI/Tabs/WorldBosses.lua", "UI/Tabs/Weekly.lua", "UI/Tabs/Legacy.lua",
   "UI/Grid.lua", "UI/DetailPanel.lua", "UI/MainFrame.lua", "UI/Minimap.lua", "UI/Settings.lua",
 })
 

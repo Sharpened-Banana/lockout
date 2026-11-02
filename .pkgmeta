@@ -10,3 +10,5 @@ ignore:
   - tests
   - docs
   - .luacheckrc
+  - Media/Icon.svg
+  - Media/Logo.png

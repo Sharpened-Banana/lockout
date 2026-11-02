@@ -2,6 +2,17 @@ local _, ns = ...
 
 local Reset = ns.Reset
 
+-- Quest-flagged bosses reset with the weekly reset.
+local function questKills(list, now, weekly)
+  local kills = {}
+  for _, boss in ipairs(list) do
+    if C_QuestLog.IsQuestFlaggedCompleted(boss.questID) then
+      kills[boss.key] = { name = boss.name, resetAt = Reset.Absolute(now, weekly) }
+    end
+  end
+  return kills
+end
+
 ns.RegisterCollector({
   name = "WorldBosses",
   events = { "UPDATE_INSTANCE_INFO", "QUEST_TURNED_IN" },
@@ -20,14 +31,12 @@ ns.RegisterCollector({
       end
     end
 
-    -- Quest-flagged bosses reset with the weekly reset.
     local weekly = C_DateAndTime.GetSecondsUntilWeeklyReset()
-    for _, boss in ipairs(ns.Content.WORLD_BOSSES) do
-      if C_QuestLog.IsQuestFlaggedCompleted(boss.questID) then
-        bosses[boss.key] = { name = boss.name, resetAt = Reset.Absolute(now, weekly) }
-      end
+    for key, kill in pairs(questKills(ns.Content.WORLD_BOSSES, now, weekly)) do
+      bosses[key] = kill
     end
 
     record.worldBosses = bosses
+    record.legacyBosses = questKills(ns.Content.LEGACY_WORLD_BOSSES, now, weekly)
   end,
 })
