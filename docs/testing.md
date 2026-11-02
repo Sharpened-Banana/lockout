@@ -32,7 +32,7 @@ below needs the real client (Retail 12.0.x). Enable errors first:
 - [ ] Dungeons tab: a saved M0 dungeon shows a check, season-best M+ level appears per dungeon.
 - [ ] World Bosses tab: a killed weekly boss shows a check with its reset tooltip.
 - [ ] The Legacy tab lists each older raid any shown character is saved to as a row, with one class-colored column per character. The Raids tab shows only season raids.
-- [ ] On the Legacy tab, the frozen column header reads "Raid" with no sort arrows, clicking a raid name does nothing, and clicking a cell opens that character's detail panel.
+- [ ] On the Legacy tab, the frozen column header reads "Name" with no sort arrows, clicking a raid name does nothing, and clicking a cell opens that character's detail panel.
 - [ ] Each listed Legacy boss's ID checks out with `/dump C_QuestLog.IsQuestFlaggedCompleted(<id>)`: `false` before a kill and `true` after.
 - [ ] A Legacy boss row shows a check only for the character that killed it, and clears at the weekly reset.
 - [ ] After looting a listed boss, its check appears without a /reload (it may take a moment after the kill).

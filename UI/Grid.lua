@@ -336,6 +336,7 @@ local function layoutHeaders(self)
   local accent = Theme.accent
   local plain = self.rowHeader ~= nil
   self.headers.name.label:SetText(self.rowHeader or "Character")
+  self.headers.name:SetEnabled(not plain) -- a disabled button shows no hover highlight
   self.headers.level:SetShown(not plain)
   self.headers.ilvl:SetShown(not plain)
   for key, b in pairs(self.headers) do

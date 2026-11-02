@@ -171,7 +171,8 @@ describe("UI smoke", function()
     assert.equals("–", slot.cells[2].text:GetText())
 
     -- the frozen header names the rows and does not sort
-    assert.equals("Raid", grid.headers.name.label:GetText())
+    assert.equals("Name", grid.headers.name.label:GetText())
+    assert.is_false(grid.headers.name:IsEnabled())  -- no hover highlight on a header that does nothing
     assert.is_false(grid.headers.level:IsShown())
     assert.is_false(grid.headers.ilvl:IsShown())
     assert.is_false(grid.headers.name.arrow:IsShown())
@@ -198,6 +199,7 @@ describe("UI smoke", function()
     ns.UI.filter:GetScript("OnTextChanged")(ns.UI.filter, true)
     ns.UI:SelectTab("Raids")
     assert.equals("Character", grid.headers.name.label:GetText())
+    assert.is_true(grid.headers.name:IsEnabled())
     assert.is_true(grid.headers.level:IsShown())
     assert.is_true(grid.headers.ilvl:IsShown())
     assert.is_true(grid.slots[1].star:IsShown())

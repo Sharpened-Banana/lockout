@@ -4,7 +4,7 @@ local _, ns = ...
 -- A tab with Rows lists its own rows; ctx.characters holds the filtered, sorted character rows.
 local Reset, Theme, Rows, Util = ns.Reset, ns.Theme, ns.Rows, ns.Util
 
-local Legacy = { title = "Legacy", order = 5, rowHeader = "Raid" }
+local Legacy = { title = "Legacy", order = 5, rowHeader = "Name" }
 ns.Tabs.Legacy = Legacy
 
 function Legacy.Rows(ctx)
