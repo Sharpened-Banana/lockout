@@ -207,6 +207,40 @@ describe("UI smoke", function()
     assert.equals("name", ns.db.settings.sortKey)
   end)
 
+  it("legacy heading rows are accent labels that open nothing", function()
+    local grid = open()
+    ns.Content.LEGACY_WORLD_BOSSES = { { key = "q333", questID = 333, name = "Old Boss", drop = "Mount" } }
+    local jaina = ns.db.characters["Player-2-0002"]
+    jaina.legacyBosses = { q333 = { name = "Old Boss", resetAt = mock.now + 3600 } }
+    -- a second old raid puts the World bosses heading on an even (striped) row
+    jaina.instances = { ["300:14"] = { name = "Beta Ruins", mapID = 300, difficultyID = 14, difficultyName = "Normal",
+      isRaid = true, resetAt = mock.now + 3600, killed = 1, total = 5, encounters = {} } }
+    ns.UI:SelectTab("Legacy")
+    assert.same({ "Raids", "Alpha Keep", "Beta Ruins", "World bosses", "Old Boss" }, labels(grid.rows))
+
+    local heading = grid.slots[4]
+    assert.same(ns.Theme.accent, { heading.name:GetTextColor() })
+    assert.is_false(heading.left.deco.zebra:IsShown())
+    assert.equals("", heading.cells[1].text:GetText())
+    heading.left:GetScript("OnEnter")(heading.left)
+    assert.is_false(heading.left.deco.hover:IsShown())
+    click(heading.left)
+    click(heading.cells[2])
+    assert.same({}, detail)
+
+    local boss = grid.slots[5]
+    assert.equals(ns.Theme.Icon.check, boss.cells[2].text:GetText())   -- Jaina killed it
+    assert.equals("–", boss.cells[1].text:GetText())
+    click(boss.cells[2])
+    assert.same({ "Player-2-0002" }, detail)
+
+    -- a filter that matches nobody keeps the boss rows, with no columns
+    ns.UI.filter:SetText("zzz")
+    ns.UI.filter:GetScript("OnTextChanged")(ns.UI.filter, true)
+    assert.same({ "World bosses", "Old Boss" }, labels(grid.rows))
+    assert.equals(0, #grid.columns)
+  end)
+
   it("unknown tab names are ignored", function()
     open()
     ns.UI:SelectTab("Nope")

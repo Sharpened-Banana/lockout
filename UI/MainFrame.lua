@@ -73,6 +73,7 @@ end
 -- The detail panel owns the selection while it exists: it sets it on open and clears it on close.
 -- Rows that are not characters open the character of the clicked column, if any.
 local function onRowClick(row, col)
+  if row.heading then return end
   local guid = row.guid or (col and col.guid)
   if not guid then return end
   if ns.Detail then

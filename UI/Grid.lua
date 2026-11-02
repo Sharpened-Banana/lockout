@@ -87,6 +87,7 @@ local function decorate(frame)
 end
 
 local function setHover(slot, on)
+  if slot.row and slot.row.heading then return end
   slot.left.deco.hover:SetShown(on)
   slot.right.deco.hover:SetShown(on)
 end
@@ -393,10 +394,12 @@ local function fillSlot(self, slot, row, index)
   local empty = ns.Rows.EMPTY
   local meta = row.char and row.char.meta or {}
   local even = index % 2 == 0
-  local selected = row.guid ~= nil and row.guid == self.selected
+  local heading = row.heading
+  local selected = not heading and row.guid ~= nil and row.guid == self.selected
   for _, part in ipairs({ slot.left, slot.right }) do
-    part.deco.zebra:SetShown(even)
+    part.deco.zebra:SetShown(even and not heading)
     part.deco.selected:SetShown(selected)
+    if heading then part.deco.hover:Hide() end   -- a recycled slot may still be lit
   end
 
   local isChar = self.rowHeader == nil
@@ -412,6 +415,8 @@ local function fillSlot(self, slot, row, index)
     slot.level:SetText(meta.level and tostring(meta.level) or empty)
     slot.level:SetTextColor(unpack(Theme.grey))
     slot.ilvl:SetText(meta.ilvl and tostring(math.floor(meta.ilvl)) or empty)
+  elseif heading then
+    slot.name:SetTextColor(unpack(Theme.accent))
   else
     slot.name:SetTextColor(TEXT[1], TEXT[2], TEXT[3])
   end
