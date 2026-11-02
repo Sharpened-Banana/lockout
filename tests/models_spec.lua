@@ -382,6 +382,23 @@ describe("Tab models", function()
         assert.is_nil(expired.tooltip)
         assert.equals("–", ns.Tabs.Legacy.Cell(galleon, cols[3], ctx).text) -- Fresh: no legacyBosses section
       end)
+
+      it("a kill without a reset time still shows the check, with no resets-in line", function()
+        ctx.characters[1].char.legacyBosses = {
+          q333 = { name = "Galleon Test", resetAt = nil },
+          q444 = { name = "No Drop Boss" },
+        }
+        local cols = ns.Tabs.Legacy.Columns(ctx)
+        local rows = ns.Tabs.Legacy.Rows(ctx)
+        local galleon, nodrop = rows[#rows - 1], rows[#rows]
+        local cell = ns.Tabs.Legacy.Cell(galleon, cols[1], ctx)
+        assert.equals(ns.Theme.Icon.check, cell.text)
+        assert.same(ns.Rows.COLORS.green, cell.color)
+        assert.same({ { left = "Son of Galleon" } }, cell.tooltip)
+        local bare = ns.Tabs.Legacy.Cell(nodrop, cols[1], ctx)
+        assert.equals(ns.Theme.Icon.check, bare.text)
+        assert.is_nil(bare.tooltip)
+      end)
     end)
 
     it("heading cells are blank", function()

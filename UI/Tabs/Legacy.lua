@@ -56,7 +56,7 @@ local function bossCell(boss, col, ctx)
   local kill = Reset.Active(col.char and col.char.legacyBosses, ctx.now)[boss.key]
   local tooltip = {}
   if boss.drop then tooltip[#tooltip + 1] = { left = boss.drop } end
-  if kill then
+  if kill and kill.resetAt then
     tooltip[#tooltip + 1] = { left = boss.name, right = "resets in " .. Util.Duration(kill.resetAt - ctx.now) }
   end
   return {

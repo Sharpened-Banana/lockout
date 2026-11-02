@@ -253,7 +253,7 @@ the same row again.
 
 ### Settings (`UI/Settings.lua`)
 Blizzard Settings vertical layout category "Lockout": minimum level shown,
-show minimap icon, show other saved instances, window scale.
+show minimap icon, window scale.
 
 ## 8. Testing
 
