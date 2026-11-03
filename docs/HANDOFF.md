@@ -6,7 +6,7 @@ For a local Claude Code session (or a human) picking this up on a machine that c
 
 - The addon was built in a cloud session and merged to `main` (PR #1). It is feature-complete against the spec, but it **has never been run in the WoW client**.
 - `lua5.1 tests/run.lua` passes 226 tests, and `luacheck .` reports 0 warnings. The tests run against a WoW API mock. They catch logic and Lua errors, not real-client behaviour.
-- Target: Retail, Midnight patch 12.1.5 (`## Interface: 120105` in `Lockout.toc`). Patch references elsewhere in the docs that say 12.0.7 are from when the addon was first built.
+- Target: Retail, Midnight patch 12.1.5, plus PTR 12.1.7 (`## Interface: 120105, 120107` in `Lockout.toc`). Patch references elsewhere in the docs that say 12.0.7 are from when the addon was first built.
 - Design spec: `docs/superpowers/specs/2026-10-30-lockout-addon-design.md`. This is the source of truth for intent.
 - Implementation plan: `docs/superpowers/plans/2026-10-30-lockout-addon.md`. Its Global Constraints still apply to new work.
 
