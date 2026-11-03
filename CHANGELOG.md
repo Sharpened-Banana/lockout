@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 (2026-11-03)
+
+- Also marked for patch 12.1.7. No changes in the game.
+
 ## 0.2.0 (2026-11-02)
 
 New

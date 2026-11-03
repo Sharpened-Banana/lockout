@@ -2,7 +2,7 @@
 ## Title: Lockout
 ## Notes: Warband lockouts, weekly progress, gear and consumables
 ## Author: lonezebra
-## Version: 0.2.0
+## Version: 0.2.1
 ## X-Curse-Project-ID: 1779233
 ## SavedVariables: LockoutDB
 ## IconTexture: Interface\AddOns\Lockout\Media\Icon
